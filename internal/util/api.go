@@ -12,6 +12,10 @@ func SendError(logger *zap.Logger, w http.ResponseWriter, r *http.Request, err e
 	switch err {
 	case errors.NotFound:
 		w.WriteHeader(http.StatusNotFound)
+	case errors.SessionExpire:
+		w.WriteHeader(http.StatusUnauthorized)
+	case errors.RegistrationSessionExpire:
+		w.WriteHeader(http.StatusForbidden)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -19,7 +23,7 @@ func SendError(logger *zap.Logger, w http.ResponseWriter, r *http.Request, err e
 }
 
 func SendJson(w http.ResponseWriter, statusCode int, v any) {
-	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(v)
 }
