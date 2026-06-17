@@ -155,6 +155,31 @@ func (s *AuthRepository) OAuthRegister(ctx context.Context, registrationId strin
 	return err
 }
 
+func (s *AuthRepository) GetUserProvider(ctx context.Context, userID string) ([]string, error) {
+	query := `
+		SELECT oauth_providers.name FROM user_oauth
+		LEFT JOIN oauth_providers ON user_oauth.oauth_provider_id = oauth_providers.oauth_provider_id
+		WHERE user_oauth.user_id = @user_id
+	`
+	args := pgx.NamedArgs{"user_id": userID}
+	rows, err := s.db.Query(ctx, query, args)
+	if err != nil {
+		return nil, err
+	}
+
+	var providers []string = make([]string, 0)
+	for rows.Next() != false {
+		var provider string
+		err := rows.Scan(&provider)
+		if err != nil {
+			return nil, err
+		}
+		providers = append(providers, provider)
+	}
+
+	return providers, err
+}
+
 func (s *AuthRepository) fetchUserOAuths(ctx context.Context, query string, args ...any) ([]model.UserOAuth, error) {
 	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {

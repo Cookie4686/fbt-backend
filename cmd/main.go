@@ -31,7 +31,7 @@ func main() {
 		logger.Fatal("DB Init", zap.Error(err))
 	}
 
-	apiHandler := api.NewAPIHandler(logger, db)
+	apiHandler := api.NewAPIHandler(logger, db, cfg)
 	logger.Info("Server Started", zap.String("URL", fmt.Sprintf("localhost:%v", cfg.API.PORT)))
 	http.ListenAndServe(fmt.Sprintf(":%v", cfg.API.PORT), apiHandler)
 }

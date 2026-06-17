@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fbt/backend/internal/config"
 	"fbt/backend/internal/domain/auth"
 	"fbt/backend/internal/util"
 	"net/http"
@@ -16,7 +17,7 @@ type api struct {
 	router *mux.Router
 }
 
-func NewAPIHandler(logger *zap.Logger, db *pgxpool.Pool) *mux.Router {
+func NewAPIHandler(logger *zap.Logger, db *pgxpool.Pool, cfg *config.Config) *mux.Router {
 	router := mux.NewRouter()
 	api := &api{logger, db, router}
 
@@ -28,7 +29,7 @@ func NewAPIHandler(logger *zap.Logger, db *pgxpool.Pool) *mux.Router {
 		}{Status: "ok"})
 	})
 
-	auth.Routes(logger, db, router)
+	auth.Routes(logger, db, cfg, router)
 
 	return api.router
 }

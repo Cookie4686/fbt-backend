@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/crypto/argon2"
 )
@@ -160,4 +161,23 @@ func (s *AuthHandler) OAuthLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	util.SendJson(w, http.StatusOK, &response)
 
+}
+
+func (s *AuthHandler) OAuthUserProviders(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	params := mux.Vars(r)
+	userID := params["id"]
+
+	providers, err := s.repo.GetUserProvider(ctx, userID)
+	if err != nil {
+		util.SendError(s.logger, w, r, err)
+		return
+	}
+
+	response := struct {
+		Providers []string `json:"providers"`
+	}{Providers: providers}
+	util.SendJson(w, http.StatusOK, &response)
 }

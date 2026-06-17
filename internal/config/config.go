@@ -16,6 +16,7 @@ type Config struct {
 		PGUSER     string `env:"PGUSER" envDefault:"root"`
 		PGPASSWORD string `env:"PGPASSWORD" envDefault:""`
 	}
+	ENCRYPTION_KEY string `env:"ENCRYPTION_KEY" envDefault:""`
 }
 
 func LoadConfig() (*Config, error) {

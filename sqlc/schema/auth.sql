@@ -42,3 +42,11 @@ CREATE TABLE "oauth_registration" (
 	"expires_at" timestamp NOT NULL,
 	CONSTRAINT "oauth_registration_oauth_provider_id_fk" FOREIGN KEY("oauth_provider_id") REFERENCES oauth_providers("oauth_provider_id") ON DELETE CASCADE
 );
+
+CREATE TABLE "mfa_totp" (
+    "id" serial PRIMARY KEY,
+    "key" varchar(255) NOT NULL,
+	"user_id" varchar(255) NOT NULL,
+	CONSTRAINT "mfa_totp_user_id_fk" FOREIGN KEY("user_id") REFERENCES users("user_id") ON DELETE CASCADE,
+	CONSTRAINT "mfa_totp_user_id_unique" UNIQUE("user_id")
+);
