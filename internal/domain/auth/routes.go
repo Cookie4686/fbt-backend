@@ -1,30 +1,32 @@
 package auth
 
 import (
-	"fbt/backend/internal/config"
-	"fbt/backend/internal/domain/auth/handler"
+	"fbt/backend/internal/dependency"
+	"fbt/backend/internal/domain/auth/service"
 
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"go.uber.org/zap"
 )
 
-func Routes(logger *zap.Logger, db *pgxpool.Pool, cfg *config.Config, router *mux.Router) {
-	handler := handler.NewAuthHandler(logger, db, cfg)
+func Routes(d *dependency.Dependency, r *mux.Router) {
+	service := service.NewAuthService(d)
+	middleware := newMiddleware(d, service)
+	AUTH := middleware.Auth
 
-	router.HandleFunc("/validate", handler.Validate).Methods("POST")
-	router.HandleFunc("/logout", handler.Logout).Methods("POST")
+	h := newHandler(d, service)
 
-	router.HandleFunc("/credentials/register", handler.CredentialsRegister).Methods("POST")
-	router.HandleFunc("/credentials/login", handler.CredentialsLogin).Methods("POST")
+	r.Handle("/validate", AUTH(h.session.Validate)).Methods("POST")
+	r.Handle("/logout", AUTH(h.session.Logout)).Methods("POST")
 
-	router.HandleFunc("/oauth/login", handler.OAuthLogin).Methods("POST")
-	router.HandleFunc("/oauth/register", handler.OAuthRegister).Methods("POST")
-	router.HandleFunc("/oauth/user/{id}", handler.OAuthUserProviders).Methods("GET")
+	r.Handle("/credentials/register", h.credentials.Register).Methods("POST")
+	r.Handle("/credentials/login", h.credentials.Login).Methods("POST")
 
-	router.HandleFunc("/mfa/totp", handler.TOTPUpsertKey).Methods("POST")
-	router.HandleFunc("/mfa/totp/validate", handler.TOTPValidate).Methods("POST")
-	router.HandleFunc("/mfa/users/{id}", handler.GetUserMFAList).Methods("GET")
+	r.Handle("/oauth/register", h.oauth.Register).Methods("POST")
+	r.Handle("/oauth/login", h.oauth.Login).Methods("POST")
+	r.Handle("/oauth/status", AUTH(h.oauth.Status)).Methods("GET")
 
-	router.HandleFunc("/users/{username}", handler.GetUser).Methods("GET")
+	r.Handle("/mfa/totp", AUTH(h.mfa.TOTPUpsertKey)).Methods("POST")
+	r.Handle("/mfa/totp/validate", AUTH(h.mfa.TOTPValidate)).Methods("POST")
+	r.Handle("/mfa/status", AUTH(h.mfa.MFAStatus)).Methods("GET")
+
+	r.Handle("/users/{username}", h.user.GetByUsername).Methods("GET")
 }

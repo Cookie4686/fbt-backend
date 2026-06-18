@@ -1,4 +1,4 @@
-package repo
+package mfa
 
 import (
 	"context"
@@ -6,9 +6,18 @@ import (
 	"fbt/backend/internal/errors"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func (s *AuthRepository) GetMFAList(ctx context.Context, userID string) (*model.MfaList, error) {
+type repo struct {
+	db *pgxpool.Pool
+}
+
+func newRepo(db *pgxpool.Pool) *repo {
+	return &repo{db}
+}
+
+func (s *repo) GetMFAList(ctx context.Context, userID string) (*model.MfaList, error) {
 	query := `
 		SELECT mfa_totp.id FROM users
 		LEFT JOIN mfa_totp ON users.user_id = mfa_totp.user_id
@@ -30,7 +39,7 @@ func (s *AuthRepository) GetMFAList(ctx context.Context, userID string) (*model.
 	}, nil
 }
 
-func (s *AuthRepository) GetTOTP(ctx context.Context, userID string) (*model.MfaTotp, error) {
+func (s *repo) GetTOTP(ctx context.Context, userID string) (*model.MfaTotp, error) {
 	query := `
 		SELECT * FROM mfa_totp
 		WHERE user_id = @user_id
@@ -46,7 +55,7 @@ func (s *AuthRepository) GetTOTP(ctx context.Context, userID string) (*model.Mfa
 	return totp, nil
 }
 
-func (s *AuthRepository) UpsertTOTP(ctx context.Context, key string, userID string) error {
+func (s *repo) UpsertTOTP(ctx context.Context, key string, userID string) error {
 	query := `
 		INSERT INTO mfa_totp(key, user_id)
 		VALUES (@key, @user_id)
@@ -59,7 +68,7 @@ func (s *AuthRepository) UpsertTOTP(ctx context.Context, key string, userID stri
 	return err
 }
 
-func (s *AuthRepository) fetchTOTP(ctx context.Context, query string, args ...any) (*model.MfaTotp, error) {
+func (s *repo) fetchTOTP(ctx context.Context, query string, args ...any) (*model.MfaTotp, error) {
 	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err

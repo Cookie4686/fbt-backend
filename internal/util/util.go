@@ -22,6 +22,36 @@ func GenerateBase64UUID() string {
 	return base64.StdEncoding.EncodeToString(bytes)
 }
 
+func Decrypt(encryptedValue string, encryptionKey string) (*string, error) {
+	key, err := base64.StdEncoding.DecodeString(encryptionKey)
+	if err != nil {
+		return nil, err
+	}
+	value, err := base64.StdEncoding.DecodeString(encryptedValue)
+	if err != nil {
+		return nil, err
+	}
+	ciphertext, err := DecryptGCM(value, key)
+	if err != nil {
+		return nil, err
+	}
+	decryptedValue := string(ciphertext)
+	return &decryptedValue, nil
+}
+
+func Encrypt(value string, encryptionKey string) (*string, error) {
+	key, err := base64.StdEncoding.DecodeString(encryptionKey)
+	if err != nil {
+		return nil, err
+	}
+	ciphertext, err := EncryptGCM([]byte(value), key)
+	if err != nil {
+		return nil, err
+	}
+	encryptedValue := base64.StdEncoding.EncodeToString(ciphertext)
+	return &encryptedValue, nil
+}
+
 func EncryptGCM(plaintext, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {

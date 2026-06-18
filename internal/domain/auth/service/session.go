@@ -1,4 +1,4 @@
-package repo
+package service
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 
 // SECURITY: Do we need to hash session id?
 
-func (s *AuthRepository) CreateSession(ctx context.Context, userId string) (*model.Session, error) {
+func (s *AuthService) CreateSession(ctx context.Context, userId string) (*model.Session, error) {
 	session := &model.Session{
 		Id:                util.GenerateBase64UUID(),
 		UserId:            userId,
@@ -31,13 +31,13 @@ func (s *AuthRepository) CreateSession(ctx context.Context, userId string) (*mod
 		"twoFactorVerified": session.TwoFactorVerified,
 	}
 
-	if _, err := s.db.Exec(ctx, query, args); err != nil {
+	if _, err := s.DB.Exec(ctx, query, args); err != nil {
 		return nil, err
 	}
 	return session, nil
 }
 
-func (s *AuthRepository) Validate(ctx context.Context, sessionId string) (*model.Auth, error) {
+func (s *AuthService) Validate(ctx context.Context, sessionId string) (*model.Auth, error) {
 	query := `
 		SELECT session_id, sessions.user_id, expires_at, two_factor_verified, users.user_id, username, email, email_verified, password, password_salt
 		FROM sessions
@@ -45,7 +45,7 @@ func (s *AuthRepository) Validate(ctx context.Context, sessionId string) (*model
 		WHERE session_id = @sessionId
 	`
 	args := pgx.NamedArgs{"sessionId": sessionId}
-	row := s.db.QueryRow(ctx, query, args)
+	row := s.DB.QueryRow(ctx, query, args)
 
 	var auth model.Auth
 	err := row.Scan(
@@ -60,6 +60,9 @@ func (s *AuthRepository) Validate(ctx context.Context, sessionId string) (*model
 		&auth.User.Password,
 		&auth.User.PasswordSalt,
 	)
+	if err == pgx.ErrNoRows {
+		return nil, errors.NotFound
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -80,29 +83,29 @@ func (s *AuthRepository) Validate(ctx context.Context, sessionId string) (*model
 	return &auth, nil
 }
 
-func (s *AuthRepository) UpdateSessionExpiration(ctx context.Context, session *model.Session) error {
+func (s *AuthService) UpdateSessionExpiration(ctx context.Context, session *model.Session) error {
 	query := `
 		UPDATE sessions
 		SET expires_at = @expiresAt
 		WHERE session_id = @sessionId
 	`
 	args := pgx.NamedArgs{"expiresAt": session.ExpiresAt, "sessionId": session.Id}
-	_, err := s.db.Exec(ctx, query, args)
+	_, err := s.DB.Exec(ctx, query, args)
 	return err
 }
 
-func (s *AuthRepository) InvalidateSession(ctx context.Context, session *model.Session) error {
+func (s *AuthService) InvalidateSession(ctx context.Context, session *model.Session) error {
 	query := `
 		DELETE FROM sessions
 		WHERE session_id = @sessionId
 	`
 	args := pgx.NamedArgs{"sessionId": session.Id}
-	_, err := s.db.Exec(ctx, query, args)
+	_, err := s.DB.Exec(ctx, query, args)
 	return err
 }
 
-func (s *AuthRepository) fetchSessions(ctx context.Context, query string, args ...any) ([]model.Session, error) {
-	rows, err := s.db.Query(ctx, query, args...)
+func (s *AuthService) fetchSessions(ctx context.Context, query string, args ...any) ([]model.Session, error) {
+	rows, err := s.DB.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -115,8 +118,8 @@ func (s *AuthRepository) fetchSessions(ctx context.Context, query string, args .
 	return sessions, nil
 }
 
-func (s *AuthRepository) fetchSession(ctx context.Context, query string, args ...any) (*model.Session, error) {
-	rows, err := s.db.Query(ctx, query, args...)
+func (s *AuthService) fetchSession(ctx context.Context, query string, args ...any) (*model.Session, error) {
+	rows, err := s.DB.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

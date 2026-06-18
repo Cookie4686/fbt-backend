@@ -1,4 +1,4 @@
-package repo
+package oauth
 
 import (
 	"context"
@@ -6,9 +6,18 @@ import (
 	"fbt/backend/internal/errors"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func (s *AuthRepository) GetUserOAuth(ctx context.Context, provider string, idToken string) (*model.UserOAuth, error) {
+type repo struct {
+	db *pgxpool.Pool
+}
+
+func newRepo(db *pgxpool.Pool) *repo {
+	return &repo{db}
+}
+
+func (s *repo) GetUserOAuth(ctx context.Context, provider string, idToken string) (*model.UserOAuth, error) {
 	query := `
 		SELECT user_oauth.* FROM user_oauth
 		LEFT JOIN oauth_providers ON user_oauth.oauth_provider_id = oauth_providers.oauth_provider_id
@@ -25,7 +34,7 @@ func (s *AuthRepository) GetUserOAuth(ctx context.Context, provider string, idTo
 	return userOAuth, err
 }
 
-func (s *AuthRepository) LinkOAuth(ctx context.Context, provider string, userID string, idToken string) error {
+func (s *repo) LinkOAuth(ctx context.Context, provider string, userID string, idToken string) error {
 	query := `
 		INSERT INTO user_oauth(user_id, oauth_provider_id, id_token)
 		VALUES (
@@ -42,7 +51,7 @@ func (s *AuthRepository) LinkOAuth(ctx context.Context, provider string, userID 
 	return err
 }
 
-func (s *AuthRepository) CreateOAuthRegistration(ctx context.Context, provider string, oauthRegistration *model.OauthRegistration) error {
+func (s *repo) CreateOAuthRegistration(ctx context.Context, provider string, oauthRegistration *model.OauthRegistration) error {
 	query := `
 		INSERT INTO oauth_registration(oauth_provider_id, id_token, registration_id, expires_at)
 		VALUES (
@@ -65,7 +74,7 @@ func (s *AuthRepository) CreateOAuthRegistration(ctx context.Context, provider s
 	return err
 }
 
-func (s *AuthRepository) GetOAuthRegistration(ctx context.Context, registrationId string) (*model.OauthRegistration, error) {
+func (s *repo) GetOAuthRegistration(ctx context.Context, registrationId string) (*model.OauthRegistration, error) {
 	query := `
 		SELECT * FROM oauth_registration
 		WHERE registration_id = @registration_id
@@ -82,7 +91,7 @@ func (s *AuthRepository) GetOAuthRegistration(ctx context.Context, registrationI
 	return OAuthRegistration, nil
 }
 
-func (s *AuthRepository) DeleteOAuthRegistration(ctx context.Context, provider string, idToken string) error {
+func (s *repo) DeleteOAuthRegistration(ctx context.Context, provider string, idToken string) error {
 	query := `
 		DELETE FROM oauth_registration
 		WHERE oauth_provider_id = 
@@ -97,7 +106,7 @@ func (s *AuthRepository) DeleteOAuthRegistration(ctx context.Context, provider s
 	return err
 }
 
-func (s *AuthRepository) OAuthRegister(ctx context.Context, registrationId string, user *model.User, session *model.Session) error {
+func (s *repo) OAuthRegister(ctx context.Context, registrationId string, user *model.User, session *model.Session) error {
 	batch := &pgx.Batch{}
 	batch.Queue(`
 		INSERT INTO users(user_id, username, email, email_verified, password, password_salt, password_enabled)
@@ -155,7 +164,7 @@ func (s *AuthRepository) OAuthRegister(ctx context.Context, registrationId strin
 	return err
 }
 
-func (s *AuthRepository) GetUserProvider(ctx context.Context, userID string) ([]string, error) {
+func (s *repo) GetUserProvider(ctx context.Context, userID string) ([]string, error) {
 	query := `
 		SELECT oauth_providers.name FROM user_oauth
 		LEFT JOIN oauth_providers ON user_oauth.oauth_provider_id = oauth_providers.oauth_provider_id
@@ -180,7 +189,7 @@ func (s *AuthRepository) GetUserProvider(ctx context.Context, userID string) ([]
 	return providers, err
 }
 
-func (s *AuthRepository) fetchUserOAuths(ctx context.Context, query string, args ...any) ([]model.UserOAuth, error) {
+func (s *repo) fetchUserOAuths(ctx context.Context, query string, args ...any) ([]model.UserOAuth, error) {
 	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -194,7 +203,7 @@ func (s *AuthRepository) fetchUserOAuths(ctx context.Context, query string, args
 	return userOAuths, nil
 }
 
-func (s *AuthRepository) fetchUserOAuth(ctx context.Context, query string, args ...any) (*model.UserOAuth, error) {
+func (s *repo) fetchUserOAuth(ctx context.Context, query string, args ...any) (*model.UserOAuth, error) {
 	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -208,7 +217,7 @@ func (s *AuthRepository) fetchUserOAuth(ctx context.Context, query string, args 
 	return &userOAuth, nil
 }
 
-func (s *AuthRepository) fetchOAuthRegistration(ctx context.Context, query string, args ...any) (*model.OauthRegistration, error) {
+func (s *repo) fetchOAuthRegistration(ctx context.Context, query string, args ...any) (*model.OauthRegistration, error) {
 	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err

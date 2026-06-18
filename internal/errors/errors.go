@@ -7,4 +7,5 @@ var (
 	SessionExpire             = errors.New("session expired")
 	RegistrationSessionExpire = errors.New("registration session expire")
 	DBError                   = errors.New("database error")
+	BadRequest                = errors.New("bad request")
 )

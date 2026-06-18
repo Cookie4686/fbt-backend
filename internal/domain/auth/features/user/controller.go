@@ -1,0 +1,24 @@
+package user
+
+import (
+	"context"
+	"fbt/backend/internal/domain/auth/service"
+	"net/http"
+)
+
+type con struct {
+	service *service.AuthService
+}
+
+func NewController(service *service.AuthService) Controller {
+	return Controller(con{service: service})
+}
+
+func (s con) GetByUsername(ctx context.Context, username string) (*GetByUsernameResponse, error) {
+	user, err := s.service.GetUserByUsername(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetByUsernameResponse{StatusCode: http.StatusOK, Payload: user}, nil
+}

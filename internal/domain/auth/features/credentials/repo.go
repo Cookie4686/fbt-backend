@@ -1,13 +1,22 @@
-package repo
+package credentials
 
 import (
 	"context"
 	"fbt/backend/internal/domain/auth/model"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func (s *AuthRepository) CredentialsRegister(ctx context.Context, user *model.User, session *model.Session) error {
+type repo struct {
+	db *pgxpool.Pool
+}
+
+func newRepo(db *pgxpool.Pool) *repo {
+	return &repo{db}
+}
+
+func (s *repo) Register(ctx context.Context, user *model.User, session *model.Session) error {
 	batch := &pgx.Batch{}
 	batch.Queue(`
 		INSERT INTO users(user_id, username, email, email_verified, password, password_salt, password_enabled)
