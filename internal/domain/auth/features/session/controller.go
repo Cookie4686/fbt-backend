@@ -8,10 +8,10 @@ import (
 )
 
 type con struct {
-	service *service.AuthService
+	service service.Service
 }
 
-func NewController(service *service.AuthService) Controller {
+func NewController(service service.Service) Controller {
 	return Controller(con{service: service})
 }
 

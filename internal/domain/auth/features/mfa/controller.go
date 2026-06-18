@@ -4,7 +4,6 @@ import (
 	"context"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
-	"fbt/backend/internal/util"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -12,11 +11,11 @@ import (
 )
 
 type con struct {
-	service *service.AuthService
+	service service.Service
 	repo    *repo
 }
 
-func NewController(service *service.AuthService, db *pgxpool.Pool) Controller {
+func NewController(service service.Service, db *pgxpool.Pool) Controller {
 	return Controller(con{service: service, repo: newRepo(db)})
 }
 
@@ -34,7 +33,7 @@ func (s con) TOTPValidate(ctx context.Context, auth *model.Auth, body *TOTPValid
 		return nil, err
 	}
 
-	secret, err := util.Decrypt(userTotp.Key, s.service.CFG.ENCRYPTION_KEY)
+	secret, err := s.service.Decrypt(userTotp.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +46,7 @@ func (s con) TOTPValidate(ctx context.Context, auth *model.Auth, body *TOTPValid
 }
 
 func (s con) TOTPUpsertKey(ctx context.Context, auth *model.Auth, body *TOTPSetupPayload) (*TOTPSetupResponse, error) {
-	encryptedKey, err := util.Encrypt(body.Key, s.service.CFG.ENCRYPTION_KEY)
+	encryptedKey, err := s.service.Encrypt(body.Key)
 	if err != nil {
 		return nil, err
 	}

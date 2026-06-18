@@ -12,7 +12,7 @@ import (
 
 // SECURITY: Do we need to hash session id?
 
-func (s *AuthService) CreateSession(ctx context.Context, userId string) (*model.Session, error) {
+func (s *service) CreateSession(ctx context.Context, userId string) (*model.Session, error) {
 	session := &model.Session{
 		Id:                util.GenerateBase64UUID(),
 		UserId:            userId,
@@ -37,7 +37,7 @@ func (s *AuthService) CreateSession(ctx context.Context, userId string) (*model.
 	return session, nil
 }
 
-func (s *AuthService) Validate(ctx context.Context, sessionId string) (*model.Auth, error) {
+func (s *service) Validate(ctx context.Context, sessionId string) (*model.Auth, error) {
 	query := `
 		SELECT session_id, sessions.user_id, expires_at, two_factor_verified, users.user_id, username, email, email_verified, password, password_salt
 		FROM sessions
@@ -83,7 +83,7 @@ func (s *AuthService) Validate(ctx context.Context, sessionId string) (*model.Au
 	return &auth, nil
 }
 
-func (s *AuthService) UpdateSessionExpiration(ctx context.Context, session *model.Session) error {
+func (s *service) UpdateSessionExpiration(ctx context.Context, session *model.Session) error {
 	query := `
 		UPDATE sessions
 		SET expires_at = @expiresAt
@@ -94,7 +94,7 @@ func (s *AuthService) UpdateSessionExpiration(ctx context.Context, session *mode
 	return err
 }
 
-func (s *AuthService) InvalidateSession(ctx context.Context, session *model.Session) error {
+func (s *service) InvalidateSession(ctx context.Context, session *model.Session) error {
 	query := `
 		DELETE FROM sessions
 		WHERE session_id = @sessionId
@@ -104,7 +104,7 @@ func (s *AuthService) InvalidateSession(ctx context.Context, session *model.Sess
 	return err
 }
 
-func (s *AuthService) fetchSessions(ctx context.Context, query string, args ...any) ([]model.Session, error) {
+func (s *service) fetchSessions(ctx context.Context, query string, args ...any) ([]model.Session, error) {
 	rows, err := s.DB.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (s *AuthService) fetchSessions(ctx context.Context, query string, args ...a
 	return sessions, nil
 }
 
-func (s *AuthService) fetchSession(ctx context.Context, query string, args ...any) (*model.Session, error) {
+func (s *service) fetchSession(ctx context.Context, query string, args ...any) (*model.Session, error) {
 	rows, err := s.DB.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err

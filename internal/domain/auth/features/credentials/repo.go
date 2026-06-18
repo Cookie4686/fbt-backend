@@ -12,11 +12,11 @@ type repo struct {
 	db *pgxpool.Pool
 }
 
-func newRepo(db *pgxpool.Pool) *repo {
-	return &repo{db}
+func NewRepo(db *pgxpool.Pool) Repo {
+	return Repo(&repo{db: db})
 }
 
-func (s *repo) Register(ctx context.Context, user *model.User, session *model.Session) error {
+func (s repo) Register(ctx context.Context, user *model.User, session *model.Session) error {
 	batch := &pgx.Batch{}
 	batch.Queue(`
 		INSERT INTO users(user_id, username, email, email_verified, password, password_salt, password_enabled)

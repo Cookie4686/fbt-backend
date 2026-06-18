@@ -18,7 +18,7 @@ type handler struct {
 	user        *user.Feature
 }
 
-func newHandler(d *dependency.Dependency, service *service.AuthService) *handler {
+func newHandler(d *dependency.Dependency, service service.Service) *handler {
 	return &handler{
 		credentials: credentials.NewFeature(d, service),
 		mfa:         mfa.NewFeature(d, service),

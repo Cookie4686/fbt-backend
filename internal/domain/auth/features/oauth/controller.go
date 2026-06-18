@@ -17,11 +17,11 @@ import (
 )
 
 type con struct {
-	service *service.AuthService
+	service service.Service
 	repo    *repo
 }
 
-func NewController(service *service.AuthService, db *pgxpool.Pool) Controller {
+func NewController(service service.Service, db *pgxpool.Pool) Controller {
 	return Controller(con{service: service, repo: newRepo(db)})
 }
 

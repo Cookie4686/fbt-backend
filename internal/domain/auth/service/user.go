@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *AuthService) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
+func (s *service) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
 	query := `SELECT * FROM users WHERE username = @username`
 	args := pgx.NamedArgs{"username": username}
 	user, err := s.fetchUser(ctx, query, args)
@@ -21,7 +21,7 @@ func (s *AuthService) GetUserByUsername(ctx context.Context, username string) (*
 	return user, err
 }
 
-func (s *AuthService) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
+func (s *service) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	query := `SELECT * FROM users WHERE email = @email`
 	args := pgx.NamedArgs{"email": email}
 	user, err := s.fetchUser(ctx, query, args)
@@ -34,7 +34,7 @@ func (s *AuthService) GetUserByEmail(ctx context.Context, email string) (*model.
 	return user, err
 }
 
-func (s *AuthService) fetchUser(ctx context.Context, query string, args ...any) (*model.User, error) {
+func (s *service) fetchUser(ctx context.Context, query string, args ...any) (*model.User, error) {
 	rows, err := s.DB.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err

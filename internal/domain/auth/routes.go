@@ -8,11 +8,11 @@ import (
 )
 
 func Routes(d *dependency.Dependency, r *mux.Router) {
-	service := service.NewAuthService(d)
+	service := service.NewService(d)
 	middleware := newMiddleware(d, service)
-	AUTH := middleware.Auth
-
 	h := newHandler(d, service)
+
+	AUTH := middleware.Auth
 
 	r.Handle("/validate", AUTH(h.session.Validate)).Methods("POST")
 	r.Handle("/logout", AUTH(h.session.Logout)).Methods("POST")

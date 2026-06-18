@@ -10,15 +10,13 @@ import (
 
 type Handler struct {
 	*dependency.Dependency
-	service    *service.AuthService
 	controller Controller
 }
 
-func NewFeature(d *dependency.Dependency, service *service.AuthService) *Feature {
+func NewFeature(d *dependency.Dependency, service service.Service) *Feature {
 	handler := &Handler{
 		Dependency: d,
-		service:    service,
-		controller: NewController(service, d.DB),
+		controller: NewController(service, NewRepo(d.DB)),
 	}
 
 	return &Feature{

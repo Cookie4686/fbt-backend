@@ -11,10 +11,10 @@ import (
 
 type middleware struct {
 	*dependency.Dependency
-	service *service.AuthService
+	service service.Service
 }
 
-func newMiddleware(d *dependency.Dependency, service *service.AuthService) *middleware {
+func newMiddleware(d *dependency.Dependency, service service.Service) *middleware {
 	return &middleware{d, service}
 }
 

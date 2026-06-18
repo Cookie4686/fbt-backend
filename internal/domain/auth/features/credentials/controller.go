@@ -12,17 +12,16 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/argon2"
 )
 
 type con struct {
-	service *service.AuthService
-	repo    *repo
+	service service.Service
+	repo    Repo
 }
 
-func NewController(service *service.AuthService, db *pgxpool.Pool) Controller {
-	return Controller(con{service: service, repo: newRepo(db)})
+func NewController(service service.Service, repo Repo) Controller {
+	return Controller(con{service, repo})
 }
 
 func (s con) Register(ctx context.Context, payload *RegisterPayload) (*RegisterResponse, error) {

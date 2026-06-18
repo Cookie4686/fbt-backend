@@ -17,6 +17,10 @@ type Controller interface {
 	Login(context.Context, *LoginPayload) (*LoginResponse, error)
 }
 
+type Repo interface {
+	Register(context.Context, *model.User, *model.Session) error
+}
+
 type RegisterPayload struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
