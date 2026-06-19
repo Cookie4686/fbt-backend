@@ -1,13 +1,13 @@
 package auth
 
 import (
-	"fbt/backend/internal/dependency"
 	"fbt/backend/internal/domain/auth/features/credentials"
 	"fbt/backend/internal/domain/auth/features/mfa"
 	"fbt/backend/internal/domain/auth/features/oauth"
 	"fbt/backend/internal/domain/auth/features/session"
 	"fbt/backend/internal/domain/auth/features/user"
 	"fbt/backend/internal/domain/auth/service"
+	"fbt/backend/internal/util"
 )
 
 type handler struct {
@@ -18,7 +18,7 @@ type handler struct {
 	user        *user.Feature
 }
 
-func newHandler(d *dependency.Dependency, service service.Service) *handler {
+func newHandler(d *util.Dependency, service service.Service) *handler {
 	return &handler{
 		credentials: credentials.NewFeature(d, service),
 		mfa:         mfa.NewFeature(d, service),

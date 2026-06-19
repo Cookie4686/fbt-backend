@@ -1,7 +1,7 @@
 package api
 
 import (
-	"fbt/backend/internal/dependency"
+	"fbt/backend/internal/util"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -24,7 +24,7 @@ func (lrw *loggingResponseWriter) WriteHeader(code int) {
 	lrw.ResponseWriter.WriteHeader(code)
 }
 
-func useMiddlewareLogger(d *dependency.Dependency, router *mux.Router) {
+func useMiddlewareLogger(d *util.Dependency, router *mux.Router) {
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			wrappedWriter := NewLoggingResponseWriter(w)

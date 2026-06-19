@@ -2,18 +2,17 @@ package credentials
 
 import (
 	"context"
-	"fbt/backend/internal/dependency"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/util"
 	"net/http"
 )
 
 type Handler struct {
-	*dependency.Dependency
+	*util.Dependency
 	controller Controller
 }
 
-func NewFeature(d *dependency.Dependency, service service.Service) *Feature {
+func NewFeature(d *util.Dependency, service service.Service) *Feature {
 	handler := &Handler{
 		Dependency: d,
 		controller: NewController(service, NewRepo(d.DB)),

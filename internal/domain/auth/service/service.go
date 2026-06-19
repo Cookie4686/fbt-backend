@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"fbt/backend/internal/dependency"
 	"fbt/backend/internal/domain/auth/model"
+	"fbt/backend/internal/util"
 )
 
 type Service interface {
@@ -20,9 +20,9 @@ type Service interface {
 }
 
 type service struct {
-	*dependency.Dependency
+	*util.Dependency
 }
 
-func NewService(d *dependency.Dependency) Service {
+func NewService(d *util.Dependency) Service {
 	return Service(&service{Dependency: d})
 }

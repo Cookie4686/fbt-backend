@@ -2,9 +2,9 @@ package api
 
 import (
 	"fbt/backend/internal/config"
-	"fbt/backend/internal/dependency"
 	"fbt/backend/internal/domain/auth"
 	"fbt/backend/internal/domain/health"
+	"fbt/backend/internal/util"
 
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -13,7 +13,7 @@ import (
 
 func NewAPIHandler(logger *zap.Logger, db *pgxpool.Pool, cfg *config.Config) *mux.Router {
 	router := mux.NewRouter()
-	dependency := dependency.NewDependency(logger, db, cfg)
+	dependency := util.NewDependency(logger, db, cfg)
 
 	useMiddlewareLogger(dependency, router)
 

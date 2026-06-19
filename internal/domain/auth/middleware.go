@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"fbt/backend/internal/dependency"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/util"
@@ -10,11 +9,11 @@ import (
 )
 
 type middleware struct {
-	*dependency.Dependency
+	*util.Dependency
 	service service.Service
 }
 
-func newMiddleware(d *dependency.Dependency, service service.Service) *middleware {
+func newMiddleware(d *util.Dependency, service service.Service) *middleware {
 	return &middleware{d, service}
 }
 
