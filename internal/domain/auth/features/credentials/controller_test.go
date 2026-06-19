@@ -8,44 +8,44 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestCredentials(t *testing.T) {
-	s := mock.NewMockService()
-	r := mock.NewCredentialRepo(s)
-	controller := credentials.NewController(s, r)
+var (
+	service    = mock.NewMockService()
+	repo       = mock.NewCredentialRepo(service)
+	controller = credentials.NewController(service, repo)
+)
 
-	username := "test"
-	password := "12345678"
+func TestRegister(t *testing.T) {
+	payload := credentials.RegisterPayload{
+		Username: mock.ValidUser.Username,
+		Email:    "test@email.com",
+		Password: mock.ValidUser.Password,
+	}
 
-	t.Run("Credential Register Controller", func(t *testing.T) {
-		payload := credentials.RegisterPayload{
-			Username: username,
-			Email:    "test@email.com",
-			Password: password,
-		}
+	res, err := controller.Register(t.Context(), &payload)
+	require.NoError(t, err)
 
-		res, err := controller.Register(t.Context(), &payload)
-		require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 
-		require.Equal(t, http.StatusOK, res.StatusCode)
+	session := service.Sessions[slices.IndexFunc(service.Sessions, func(s model.Session) bool { return s.Id == res.Payload.Id })]
+	assert.Equal(t, session, *res.Payload, "Session should match session in the database")
+	assert.Equal(t, false, res.Payload.TwoFactorVerified, "Session should not be 2FA verified")
 
-		session := s.Sessions[slices.IndexFunc(s.Sessions, func(s model.Session) bool { return s.Id == res.Payload.Id })]
-		require.Equal(t, session, *res.Payload)
-		require.Equal(t, false, res.Payload.TwoFactorVerified)
+	user := service.Users[slices.IndexFunc(service.Users, func(user model.User) bool { return user.Username == payload.Username })]
+	assert.Equal(t, payload.Username, user.Username, "User Username should match Input")
+	assert.Equal(t, payload.Email, user.Email, "User Email should match Input")
+	assert.Equal(t, false, user.EmailVerified, "User Email should not be verified")
+	assert.NotEqual(t, payload.Password, user.Password, "User Password should not match Input")
+}
 
-		user := s.Users[slices.IndexFunc(s.Users, func(user model.User) bool { return user.Username == payload.Username })]
-		require.Equal(t, payload.Username, user.Username)
-		require.Equal(t, payload.Email, user.Email)
-		require.Equal(t, false, user.EmailVerified)
-		require.NotEqual(t, payload.Password, user.Password)
-	})
-
+func TestLogin(t *testing.T) {
 	t.Run("Credential Login Controller", func(t *testing.T) {
 		payload := credentials.LoginPayload{
-			Username: username,
-			Password: password,
+			Username: mock.ValidUser.Username,
+			Password: mock.ValidUser.Password,
 		}
 
 		res, err := controller.Login(t.Context(), &payload)
@@ -53,8 +53,8 @@ func TestCredentials(t *testing.T) {
 
 		require.Equal(t, http.StatusOK, res.StatusCode)
 
-		session := s.Sessions[slices.IndexFunc(s.Sessions, func(s model.Session) bool { return s.Id == res.Payload.Id })]
-		require.Equal(t, session, *res.Payload)
-		require.Equal(t, false, res.Payload.TwoFactorVerified)
+		session := service.Sessions[slices.IndexFunc(service.Sessions, func(s model.Session) bool { return s.Id == res.Payload.Id })]
+		assert.Equal(t, session, *res.Payload, "Session should match session in the database")
+		assert.Equal(t, false, res.Payload.TwoFactorVerified, "Session should not be 2FA verified")
 	})
 }

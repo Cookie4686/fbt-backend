@@ -22,14 +22,14 @@ type Repo interface {
 }
 
 type RegisterPayload struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Username string `json:"username" validate:"required,min=3,max=255,alphanumunicode"`
+	Password string `json:"password" validate:"required,min=8,max=255"`
+	Email    string `json:"email" validate:"required,email"`
 }
 type RegisterResponse = util.Response[model.Session]
 
 type LoginPayload struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" validate:"required,min=3,max=255,alphanumunicode"`
+	Password string `json:"password" validate:"required,min=8,max=255"`
 }
 type LoginResponse = util.Response[model.Session]

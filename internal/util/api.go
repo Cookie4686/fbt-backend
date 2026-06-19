@@ -5,6 +5,7 @@ import (
 	"fbt/backend/internal/errors"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 )
 
@@ -38,11 +39,15 @@ type Response[T any] struct {
 	Payload    *T
 }
 
+var validate = validator.New(validator.WithRequiredStructEnabled())
+
 func ExtractPayload[T any](r *http.Request) (*T, error) {
 	var body T
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&body); err != nil {
-		return &body, err
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		return nil, err
+	}
+	if err := validate.Struct(body); err != nil {
+		return nil, err
 	}
 	return &body, nil
 }
