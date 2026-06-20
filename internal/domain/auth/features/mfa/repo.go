@@ -13,8 +13,8 @@ type repo struct {
 	db *pgxpool.Pool
 }
 
-func newRepo(db *pgxpool.Pool) *repo {
-	return &repo{db}
+func newRepo(db *pgxpool.Pool) Repo {
+	return Repo(&repo{db})
 }
 
 func (s *repo) GetMFAList(ctx context.Context, userID string) (*model.MfaList, error) {

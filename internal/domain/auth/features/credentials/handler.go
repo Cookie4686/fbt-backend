@@ -7,13 +7,13 @@ import (
 	"net/http"
 )
 
-type Handler struct {
+type handler struct {
 	*util.Dependency
 	controller Controller
 }
 
 func NewFeature(d *util.Dependency, service service.Service) *Feature {
-	handler := &Handler{
+	handler := &handler{
 		Dependency: d,
 		controller: NewController(service, NewRepo(d.DB)),
 	}
@@ -24,7 +24,7 @@ func NewFeature(d *util.Dependency, service service.Service) *Feature {
 	}
 }
 
-func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
@@ -37,7 +37,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 

@@ -2,31 +2,32 @@ package oauth
 
 import (
 	"context"
+	"fbt/backend/internal/domain/auth/middleware"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/util"
 	"net/http"
 )
 
-type Handler struct {
+type handler struct {
 	*util.Dependency
 	controller Controller
 }
 
-func NewFeature(d *util.Dependency, service service.Service) *Feature {
-	handler := &Handler{
+func NewFeature(d *util.Dependency, s service.Service, m middleware.Middleware) *Feature {
+	h := &handler{
 		Dependency: d,
-		controller: NewController(service, d.DB),
+		controller: NewController(s, d.DB),
 	}
 
 	return &Feature{
-		Register: http.HandlerFunc(handler.Register),
-		Login:    http.HandlerFunc(handler.Login),
-		Status:   http.HandlerFunc(handler.Status),
+		Register:    http.HandlerFunc(h.Register),
+		Login:       http.HandlerFunc(h.Login),
+		AUTH_Status: m.Auth(http.HandlerFunc(h.Status)),
 	}
 }
 
-func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
@@ -39,7 +40,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
@@ -52,7 +53,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) Status(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Status(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 

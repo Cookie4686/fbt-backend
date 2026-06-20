@@ -1,23 +1,9 @@
 package mfa
 
 import (
-	"context"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/util"
-	"net/http"
 )
-
-type Feature struct {
-	MFAStatus     http.HandlerFunc
-	TOTPValidate  http.HandlerFunc
-	TOTPUpsertKey http.HandlerFunc
-}
-
-type Controller interface {
-	MFAStatus(context.Context, *model.Auth) (*MFAStatusResponse, error)
-	TOTPValidate(context.Context, *model.Auth, *TOTPValidatePayload) (*TOTPValidateResponse, error)
-	TOTPUpsertKey(context.Context, *model.Auth, *TOTPSetupPayload) (*TOTPSetupResponse, error)
-}
 
 type TOTPValidatePayload struct {
 	Code string `json:"code"`

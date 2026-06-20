@@ -1,23 +1,9 @@
 package oauth
 
 import (
-	"context"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/util"
-	"net/http"
 )
-
-type Feature struct {
-	Register http.HandlerFunc
-	Login    http.HandlerFunc
-	Status   http.HandlerFunc
-}
-
-type Controller interface {
-	Register(context.Context, *RegisterPayload) (*RegisterResponse, error)
-	Login(context.Context, *LoginPayload) (*LoginResponse, error)
-	Status(context.Context, *model.Auth) (*StatusResponse, error)
-}
 
 type RegisterPayload struct {
 	RegistrationID  string `json:"registration_id"`

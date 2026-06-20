@@ -1,32 +1,28 @@
 package auth
 
 import (
-	"fbt/backend/internal/domain/auth/service"
+	"fbt/backend/internal/domain/auth/features"
 	"fbt/backend/internal/util"
 
 	"github.com/gorilla/mux"
 )
 
 func Routes(d *util.Dependency, r *mux.Router) {
-	service := service.NewService(d)
-	middleware := newMiddleware(d, service)
-	h := newHandler(d, service)
+	f := features.NewFeatures(d)
 
-	AUTH := middleware.Auth
+	r.Handle("/credentials/register", f.Credentials.Register).Methods("POST")
+	r.Handle("/credentials/login", f.Credentials.Login).Methods("POST")
 
-	r.Handle("/credentials/register", h.credentials.Register).Methods("POST")
-	r.Handle("/credentials/login", h.credentials.Login).Methods("POST")
+	r.Handle("/oauth/register", f.OAuth.Register).Methods("POST")
+	r.Handle("/oauth/login", f.OAuth.Login).Methods("POST")
+	r.Handle("/oauth/status", f.OAuth.AUTH_Status).Methods("GET")
 
-	r.Handle("/oauth/register", h.oauth.Register).Methods("POST")
-	r.Handle("/oauth/login", h.oauth.Login).Methods("POST")
-	r.Handle("/oauth/status", AUTH(h.oauth.Status)).Methods("GET")
+	r.Handle("/mfa/totp", f.MFA.AUTH_TOTPUpsertKey).Methods("POST")
+	r.Handle("/mfa/totp/validate", f.MFA.AUTH_TOTPValidate).Methods("POST")
+	r.Handle("/mfa/status", f.MFA.AUTH_MFAStatus).Methods("GET")
 
-	r.Handle("/mfa/totp", AUTH(h.mfa.TOTPUpsertKey)).Methods("POST")
-	r.Handle("/mfa/totp/validate", AUTH(h.mfa.TOTPValidate)).Methods("POST")
-	r.Handle("/mfa/status", AUTH(h.mfa.MFAStatus)).Methods("GET")
+	r.Handle("/validate", f.Session.AUTH_Validate).Methods("POST")
+	r.Handle("/logout", f.Session.AUTH_Logout).Methods("POST")
 
-	r.Handle("/validate", AUTH(h.session.Validate)).Methods("POST")
-	r.Handle("/logout", AUTH(h.session.Logout)).Methods("POST")
-
-	r.Handle("/users/{username}", h.user.GetByUsername).Methods("GET")
+	r.Handle("/users/{username}", f.User.GetByUsername).Methods("GET")
 }

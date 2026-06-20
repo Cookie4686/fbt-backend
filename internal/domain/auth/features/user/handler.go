@@ -9,6 +9,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type Feature struct {
+	GetByUsername http.HandlerFunc
+}
+
 type Handler struct {
 	*util.Dependency
 	controller Controller

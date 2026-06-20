@@ -1,4 +1,4 @@
-package auth
+package middleware
 
 import (
 	"context"
@@ -8,13 +8,18 @@ import (
 	"net/http"
 )
 
+type Middleware interface {
+	Auth(next http.Handler) http.Handler
+}
+
 type middleware struct {
 	*util.Dependency
+
 	service service.Service
 }
 
-func newMiddleware(d *util.Dependency, service service.Service) *middleware {
-	return &middleware{d, service}
+func NewMiddleware(d *util.Dependency, service service.Service) Middleware {
+	return Middleware(&middleware{Dependency: d, service: service})
 }
 
 func (s *middleware) Auth(next http.Handler) http.Handler {

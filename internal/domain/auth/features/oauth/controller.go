@@ -18,7 +18,7 @@ import (
 
 type con struct {
 	service service.Service
-	repo    *repo
+	repo    Repo
 }
 
 func NewController(service service.Service, db *pgxpool.Pool) Controller {

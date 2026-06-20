@@ -6,6 +6,10 @@ import (
 	"net/http"
 )
 
+type Controller interface {
+	GetByUsername(ctx context.Context, username string) (*GetByUsernameResponse, error)
+}
+
 type con struct {
 	service service.Service
 }

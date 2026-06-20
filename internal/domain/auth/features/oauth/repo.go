@@ -13,8 +13,8 @@ type repo struct {
 	db *pgxpool.Pool
 }
 
-func newRepo(db *pgxpool.Pool) *repo {
-	return &repo{db}
+func newRepo(db *pgxpool.Pool) Repo {
+	return Repo(&repo{db})
 }
 
 func (s *repo) GetUserOAuth(ctx context.Context, provider string, idToken string) (*model.UserOAuth, error) {

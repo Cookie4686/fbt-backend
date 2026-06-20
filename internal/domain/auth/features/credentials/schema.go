@@ -1,25 +1,9 @@
 package credentials
 
 import (
-	"context"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/util"
-	"net/http"
 )
-
-type Feature struct {
-	Register http.HandlerFunc
-	Login    http.HandlerFunc
-}
-
-type Controller interface {
-	Register(context.Context, *RegisterPayload) (*RegisterResponse, error)
-	Login(context.Context, *LoginPayload) (*LoginResponse, error)
-}
-
-type Repo interface {
-	Register(context.Context, *model.User, *model.Session) error
-}
 
 type RegisterPayload struct {
 	Username string `json:"username" validate:"required,min=3,max=255,alphanumunicode"`

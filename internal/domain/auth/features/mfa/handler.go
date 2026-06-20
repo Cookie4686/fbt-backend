@@ -2,31 +2,32 @@ package mfa
 
 import (
 	"context"
+	"fbt/backend/internal/domain/auth/middleware"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/util"
 	"net/http"
 )
 
-type Handler struct {
+type handler struct {
 	*util.Dependency
 	controller Controller
 }
 
-func NewFeature(d *util.Dependency, service service.Service) *Feature {
-	handler := &Handler{
+func NewFeature(d *util.Dependency, service service.Service, m middleware.Middleware) *Feature {
+	h := &handler{
 		Dependency: d,
 		controller: NewController(service, d.DB),
 	}
 
 	return &Feature{
-		MFAStatus:     http.HandlerFunc(handler.MFAStatus),
-		TOTPValidate:  http.HandlerFunc(handler.TOTPValidate),
-		TOTPUpsertKey: http.HandlerFunc(handler.TOTPUpsertKey),
+		AUTH_MFAStatus:     m.Auth(http.HandlerFunc(h.MFAStatus)),
+		AUTH_TOTPValidate:  m.Auth(http.HandlerFunc(h.TOTPValidate)),
+		AUTH_TOTPUpsertKey: m.Auth(http.HandlerFunc(h.TOTPUpsertKey)),
 	}
 }
 
-func (h *Handler) MFAStatus(w http.ResponseWriter, r *http.Request) {
+func (h *handler) MFAStatus(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
@@ -39,7 +40,7 @@ func (h *Handler) MFAStatus(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) TOTPValidate(w http.ResponseWriter, r *http.Request) {
+func (h *handler) TOTPValidate(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
@@ -54,7 +55,7 @@ func (h *Handler) TOTPValidate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) TOTPUpsertKey(w http.ResponseWriter, r *http.Request) {
+func (h *handler) TOTPUpsertKey(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
