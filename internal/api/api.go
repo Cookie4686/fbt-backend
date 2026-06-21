@@ -3,6 +3,7 @@ package api
 import (
 	"fbt/backend/internal/config"
 	"fbt/backend/internal/domain/auth"
+	"fbt/backend/internal/domain/bookkeeping"
 	"fbt/backend/internal/domain/health"
 	"fbt/backend/internal/util"
 
@@ -12,13 +13,18 @@ import (
 )
 
 func NewAPIHandler(logger *zap.Logger, db *pgxpool.Pool, cfg *config.Config) *mux.Router {
-	router := mux.NewRouter()
-	dependency := util.NewDependency(logger, db, cfg)
+	r := mux.NewRouter()
+	d := util.NewDependency(logger, db, cfg)
 
-	useMiddlewareLogger(dependency, router)
+	useMiddlewareLogger(d, r)
 
-	health.Routes(dependency, router)
-	auth.Routes(dependency, router)
+	health.Routes(d, r)
+	m := auth.Routes(d, r)
 
-	return router
+	privateRouter := r.NewRoute().Subrouter()
+	privateRouter.Use(m.Auth)
+
+	bookkeeping.Routes(d, privateRouter)
+
+	return r
 }

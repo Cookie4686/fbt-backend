@@ -29,7 +29,9 @@ func SendJson[T any](w http.ResponseWriter, p *Response[T]) error {
 	if p != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(p.StatusCode)
-		json.NewEncoder(w).Encode(p.Payload)
+		if err := json.NewEncoder(w).Encode(p.Payload); err != nil {
+			return errors.BadRequest
+		}
 	}
 	return nil
 }

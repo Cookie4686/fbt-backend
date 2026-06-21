@@ -38,11 +38,16 @@ func NewTestContainer(t *testing.T, dbName string, user string, password string)
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
-	migrationFile, err := os.ReadFile(filepath.Join(wd, "/sqlc/schema/auth_up.sql"))
-	require.NoError(t, err)
+	for _, v := range []string{
+		"/sqlc/schema/auth_up.sql",
+		"/sqlc/schema/bookkeeping_up.sql",
+	} {
+		migrationFile, err := os.ReadFile(filepath.Join(wd, v))
+		require.NoError(t, err)
 
-	_, _, err = ctr.Exec(ctx, []string{"psql", "-U", user, "-d", dbName, "-c", string(migrationFile)})
-	require.NoError(t, err)
+		_, _, err = ctr.Exec(ctx, []string{"psql", "-U", user, "-d", dbName, "-c", string(migrationFile)})
+		require.NoError(t, err)
+	}
 
 	err = ctr.Snapshot(ctx)
 	require.NoError(t, err)

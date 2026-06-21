@@ -19,7 +19,7 @@ type features struct {
 	User        *user.Feature
 }
 
-func NewFeatures(d *util.Dependency) *features {
+func NewFeatures(d *util.Dependency) (*features, middleware.Middleware) {
 	s := service.NewService(d)
 	m := middleware.NewMiddleware(d, s)
 
@@ -29,5 +29,5 @@ func NewFeatures(d *util.Dependency) *features {
 		OAuth:       oauth.NewFeature(d, s, m),
 		Session:     session.NewFeature(d, s, m),
 		User:        user.NewFeature(d, s),
-	}
+	}, m
 }
