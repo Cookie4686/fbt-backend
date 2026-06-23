@@ -2,27 +2,38 @@ package user
 
 import (
 	"context"
+	"fbt/backend/internal/domain/auth/common"
+	"fbt/backend/internal/domain/auth/features/user/pb"
 	"fbt/backend/internal/domain/auth/service"
-	"net/http"
+
+	"google.golang.org/grpc"
 )
 
-type Controller interface {
-	GetByUsername(ctx context.Context, username string) (*GetByUsernameResponse, error)
-}
-
-type con struct {
+type Server struct {
 	service service.Service
+
+	pb.UnimplementedUserServer
 }
 
-func NewController(service service.Service) Controller {
-	return Controller(con{service: service})
+func NewServer(service service.Service) *Server {
+	return &Server{service, pb.UnimplementedUserServer{}}
 }
 
-func (s con) GetByUsername(ctx context.Context, username string) (*GetByUsernameResponse, error) {
-	user, err := s.service.GetUserByUsername(ctx, username)
+func RegisterService(service service.Service, s *grpc.Server) {
+	pb.RegisterUserServer(s, NewServer(service))
+}
+
+func (s *Server) GetByUsername(ctx context.Context, in *pb.GetByUsernameRequest) (*pb.GetByUsernameReply, error) {
+	user, err := s.service.GetUserByUsername(ctx, in.Username)
 	if err != nil {
 		return nil, err
 	}
 
-	return &GetByUsernameResponse{StatusCode: http.StatusOK, Payload: user}, nil
+	return &pb.GetByUsernameReply{User: &common.User{
+		Id:              user.Id,
+		Username:        user.Username,
+		Email:           user.Email,
+		EmailVerified:   user.EmailVerified,
+		PasswordEnabled: user.PasswordEnabled,
+	}}, nil
 }

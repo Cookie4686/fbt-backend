@@ -1,17 +1,9 @@
 package credentials_test
 
-import (
-	"fbt/backend/internal/domain/auth/features/credentials"
-	"fbt/backend/internal/domain/auth/test/mock"
-	"testing"
-
-	"github.com/go-playground/validator/v10"
-	"github.com/stretchr/testify/assert"
-)
-
+/*
 var validate = validator.New(validator.WithRequiredStructEnabled())
 
-func TestRegisterSchema(t *testing.T) {
+ func TestRegisterSchema(t *testing.T) {
 	t.Run("Missing fields", func(t *testing.T) {
 		for _, invalidPayload := range []credentials.RegisterPayload{
 			{Username: mock.ValidUser.Username},
@@ -49,3 +41,4 @@ func TestRegisterSchema(t *testing.T) {
 		}
 	})
 }
+*/

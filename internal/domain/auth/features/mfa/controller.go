@@ -2,32 +2,50 @@ package mfa
 
 import (
 	"context"
+	"fbt/backend/internal/domain/auth/common"
+	"fbt/backend/internal/domain/auth/features/mfa/pb"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
-	"net/http"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pquerna/otp/totp"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type con struct {
+type Server struct {
 	service service.Service
 	repo    Repo
+
+	pb.UnimplementedMFAServer
 }
 
-func NewController(service service.Service, db *pgxpool.Pool) Controller {
-	return Controller(con{service: service, repo: newRepo(db)})
+func NewServer(service service.Service, repo Repo) *Server {
+	return &Server{service, repo, pb.UnimplementedMFAServer{}}
 }
 
-func (s con) MFAStatus(ctx context.Context, auth *model.Auth) (*MFAStatusResponse, error) {
+func RegisterService(service service.Service, repo Repo, s *grpc.Server) {
+	pb.RegisterMFAServer(s, NewServer(service, repo))
+}
+
+func (s *Server) Status(ctx context.Context, in *pb.StatusRequest) (*pb.StatusReply, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	auth := ctx.Value("auth").(*model.Auth)
+
 	userMfaList, err := s.repo.GetMFAList(ctx, auth.User.Id)
 	if err != nil {
 		return nil, err
 	}
-	return &MFAStatusResponse{StatusCode: http.StatusOK, Payload: userMfaList}, nil
+	return &pb.StatusReply{TotpEnabled: userMfaList.Totp}, nil
 }
 
-func (s con) TOTPValidate(ctx context.Context, auth *model.Auth, body *TOTPValidatePayload) (*TOTPValidateResponse, error) {
+func (s *Server) TOTPValidate(ctx context.Context, in *pb.TOTPValidateRequest) (*pb.TOTPValidateReply, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	auth := ctx.Value("auth").(*model.Auth)
+
 	userTotp, err := s.repo.GetTOTP(ctx, auth.User.Id)
 	if err != nil {
 		return nil, err
@@ -38,15 +56,20 @@ func (s con) TOTPValidate(ctx context.Context, auth *model.Auth, body *TOTPValid
 		return nil, err
 	}
 
-	isPassed := totp.Validate(body.Code, *secret)
+	isValid := totp.Validate(in.Code, *secret)
 
-	return &TOTPValidateResponse{
-		StatusCode: http.StatusOK,
-		Payload:    &TOTPValidateResponsePayload{IsPassed: isPassed}}, nil
+	return &pb.TOTPValidateReply{
+		IsValid: isValid,
+	}, nil
 }
 
-func (s con) TOTPUpsertKey(ctx context.Context, auth *model.Auth, body *TOTPSetupPayload) (*TOTPSetupResponse, error) {
-	encryptedKey, err := s.service.Encrypt(body.Key)
+func (s *Server) TOTPUpsertKey(ctx context.Context, in *pb.TOTPUpsertRequest) (*pb.TOTPUpsertReply, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	auth := ctx.Value("auth").(*model.Auth)
+
+	encryptedKey, err := s.service.Encrypt(in.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -64,5 +87,10 @@ func (s con) TOTPUpsertKey(ctx context.Context, auth *model.Auth, body *TOTPSetu
 		return nil, err
 	}
 
-	return &TOTPSetupResponse{StatusCode: http.StatusOK, Payload: session}, nil
+	return &pb.TOTPUpsertReply{Session: &common.Session{
+		Id:                session.Id,
+		UserID:            session.UserId,
+		TwoFactorVerified: session.TwoFactorVerified,
+		ExpiresAt:         timestamppb.New(session.ExpiresAt),
+	}}, nil
 }

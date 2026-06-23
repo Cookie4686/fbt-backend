@@ -8,6 +8,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type Repo interface {
+	Register(context.Context, *model.User, *model.Session) error
+}
+
 type repo struct {
 	db *pgxpool.Pool
 }

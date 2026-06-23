@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package common;
+option go_package = "fbt/backend/internal/domain/auth/common";
+
+message User {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  bool emailVerified = 4;
+  bool passwordEnabled = 5;
+}

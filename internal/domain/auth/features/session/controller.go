@@ -2,32 +2,65 @@ package session
 
 import (
 	"context"
+	"fbt/backend/internal/domain/auth/common"
+	"fbt/backend/internal/domain/auth/features/session/pb"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
-	"net/http"
+
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type con struct {
+type Server struct {
 	service service.Service
+
+	pb.UnimplementedSessionServer
 }
 
-func NewController(service service.Service) Controller {
-	return Controller(con{service: service})
+func NewServer(service service.Service) *Server {
+	return &Server{service, pb.UnimplementedSessionServer{}}
 }
 
-func (s con) Validate(ctx context.Context, auth *model.Auth) (*ValidateResponse, error) {
+func RegisterService(service service.Service, s *grpc.Server) {
+	pb.RegisterSessionServer(s, NewServer(service))
+}
+
+func (s *Server) Validate(ctx context.Context, in *pb.ValidateRequest) (*pb.ValidateReply, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	auth := ctx.Value("auth").(*model.Auth)
+
 	auth, err := s.service.Validate(ctx, auth.Session.Id)
 	if err != nil {
 		return nil, err
 	}
-	return &ValidateResponse{StatusCode: http.StatusOK, Payload: auth}, nil
+	return &pb.ValidateReply{
+		User: &common.User{
+			Id:              auth.User.Id,
+			Username:        auth.User.Username,
+			Email:           auth.User.Email,
+			EmailVerified:   auth.User.EmailVerified,
+			PasswordEnabled: auth.User.PasswordEnabled,
+		},
+		Session: &common.Session{
+			Id:                auth.Session.Id,
+			UserID:            auth.Session.UserId,
+			TwoFactorVerified: auth.Session.TwoFactorVerified,
+			ExpiresAt:         timestamppb.New(auth.Session.ExpiresAt),
+		},
+	}, nil
 }
 
-func (s con) Logout(ctx context.Context, auth *model.Auth) (*LogoutResponse, error) {
+func (s *Server) Logout(ctx context.Context, in *pb.LogoutRequest) (*pb.LogoutReply, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	auth := ctx.Value("auth").(*model.Auth)
+
 	err := s.service.InvalidateSession(ctx, &model.Session{Id: auth.Session.Id})
 	if err != nil {
 		return nil, err
 	}
-
-	return &LogoutResponse{StatusCode: http.StatusOK}, nil
+	return nil, nil
 }

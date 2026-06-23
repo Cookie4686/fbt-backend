@@ -13,8 +13,18 @@ type repo struct {
 	db *pgxpool.Pool
 }
 
-func newRepo(db *pgxpool.Pool) Repo {
+func NewRepo(db *pgxpool.Pool) Repo {
 	return Repo(&repo{db})
+}
+
+type Repo interface {
+	GetUserOAuth(ctx context.Context, provider string, idToken string) (*model.UserOAuth, error)
+	LinkOAuth(ctx context.Context, provider string, userID string, idToken string) error
+	CreateOAuthRegistration(ctx context.Context, provider string, oauthRegistration *model.OauthRegistration) error
+	GetOAuthRegistration(ctx context.Context, registrationId string) (*model.OauthRegistration, error)
+	DeleteOAuthRegistration(ctx context.Context, provider string, idToken string) error
+	OAuthRegister(ctx context.Context, registrationId string, user *model.User, session *model.Session) error
+	GetUserProvider(ctx context.Context, userID string) ([]string, error)
 }
 
 func (s *repo) GetUserOAuth(ctx context.Context, provider string, idToken string) (*model.UserOAuth, error) {

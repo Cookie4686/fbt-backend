@@ -6,10 +6,13 @@ import (
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/util"
 	"net/http"
+
+	"google.golang.org/grpc"
 )
 
 type Middleware interface {
 	Auth(next http.Handler) http.Handler
+	UnaryInterceptor(context.Context, any, *grpc.UnaryServerInfo, grpc.UnaryHandler) (any, error)
 }
 
 type middleware struct {

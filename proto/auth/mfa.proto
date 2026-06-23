@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package mfa;
+option go_package = "internal/domain/auth/features/mfa/pb";
+
+import "common/session.proto";
+
+service MFA {
+  rpc Status (StatusRequest) returns (StatusReply) {}
+  rpc TOTPValidate (TOTPValidateRequest) returns (TOTPValidateReply) {}
+  rpc TOTPUpsertKey (TOTPUpsertRequest) returns (TOTPUpsertReply) {}
+}
+
+message StatusRequest {}
+message StatusReply {
+    bool totpEnabled = 1;
+}
+
+message TOTPValidateRequest {
+  string code = 1;
+}
+message TOTPValidateReply {
+    bool isValid = 1;
+}
+
+message TOTPUpsertRequest {
+    string key = 1;
+}
+message TOTPUpsertReply {
+    common.Session session = 1;
+}

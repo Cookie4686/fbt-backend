@@ -5,34 +5,44 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
+	"fbt/backend/internal/domain/auth/common"
+	"fbt/backend/internal/domain/auth/features/credentials/pb"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
+	"fbt/backend/internal/errors"
 	"fbt/backend/internal/util"
-	"net/http"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/crypto/argon2"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type con struct {
+type Server struct {
 	service service.Service
 	repo    Repo
+
+	pb.UnimplementedCredentialsServer
 }
 
-func NewController(service service.Service, repo Repo) Controller {
-	return Controller(con{service, repo})
+func NewServer(service service.Service, repo Repo) *Server {
+	return &Server{service, repo, pb.UnimplementedCredentialsServer{}}
 }
 
-func (s con) Register(ctx context.Context, payload *RegisterPayload) (*RegisterResponse, error) {
+func RegisterService(service service.Service, repo Repo, s *grpc.Server) {
+	pb.RegisterCredentialsServer(s, NewServer(service, repo))
+}
+
+func (s *Server) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterReply, error) {
 	salt := make([]byte, 16)
 	rand.Read(salt)
-	passwordHash := argon2.IDKey([]byte(payload.Password), salt, 2, 19*1024, 1, 32)
+	passwordHash := argon2.IDKey([]byte(in.Password), salt, 2, 19*1024, 1, 32)
 
 	user := &model.User{
 		Id:              util.GenerateBase32UUID(),
-		Username:        payload.Username,
-		Email:           payload.Email,
+		Username:        in.Username,
+		Email:           in.Email,
 		EmailVerified:   false,
 		Password:        pgtype.Text{String: base64.StdEncoding.EncodeToString(passwordHash), Valid: true},
 		PasswordSalt:    pgtype.Text{String: base64.StdEncoding.EncodeToString(salt), Valid: true},
@@ -49,12 +59,17 @@ func (s con) Register(ctx context.Context, payload *RegisterPayload) (*RegisterR
 		return nil, err
 	}
 
-	return &RegisterResponse{StatusCode: http.StatusOK, Payload: session}, nil
+	return &pb.RegisterReply{Session: &common.Session{
+		Id:                session.Id,
+		UserID:            session.UserId,
+		ExpiresAt:         timestamppb.New(session.ExpiresAt),
+		TwoFactorVerified: session.TwoFactorVerified,
+	}}, nil
 }
 
-func (h con) Login(ctx context.Context, body *LoginPayload) (*LoginResponse, error) {
+func (s *Server) Login(ctx context.Context, body *pb.LoginRequest) (*pb.LoginReply, error) {
 	// Get User Data From Database
-	user, err := h.service.GetUserByUsername(ctx, body.Username)
+	user, err := s.service.GetUserByUsername(ctx, body.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -73,12 +88,17 @@ func (h con) Login(ctx context.Context, body *LoginPayload) (*LoginResponse, err
 	passwordHash := argon2.IDKey([]byte(body.Password), storedSalt, 2, 19*1024, 1, 32)
 	if subtle.ConstantTimeCompare(passwordHash, storedHash) == 1 {
 		// Create Session in Database
-		session, err := h.service.CreateSession(ctx, user.Id)
+		session, err := s.service.CreateSession(ctx, user.Id)
 		if err != nil {
 			return nil, err
 		}
-		return &LoginResponse{StatusCode: http.StatusOK, Payload: session}, nil
+		return &pb.LoginReply{Session: &common.Session{
+			Id:                session.Id,
+			UserID:            session.UserId,
+			ExpiresAt:         timestamppb.New(session.ExpiresAt),
+			TwoFactorVerified: session.TwoFactorVerified,
+		}}, nil
 	} else {
-		return &LoginResponse{StatusCode: http.StatusUnauthorized}, nil
+		return nil, errors.Unauthorized
 	}
 }

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package session;
+option go_package = "internal/domain/auth/features/session/pb";
+
+import "common/session.proto";
+import "common/user.proto";
+
+service Session {
+  rpc Logout (LogoutRequest) returns (LogoutReply) {}
+  rpc Validate (ValidateRequest) returns (ValidateReply) {}
+}
+
+message LogoutRequest {}
+message LogoutReply {}
+
+message ValidateRequest {}
+message ValidateReply {
+    common.Session session = 1;
+    common.User user = 2;
+}

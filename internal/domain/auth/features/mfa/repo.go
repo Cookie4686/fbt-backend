@@ -9,11 +9,17 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type Repo interface {
+	GetMFAList(ctx context.Context, userID string) (*model.MfaList, error)
+	GetTOTP(ctx context.Context, userID string) (*model.MfaTotp, error)
+	UpsertTOTP(ctx context.Context, key string, userID string) error
+}
+
 type repo struct {
 	db *pgxpool.Pool
 }
 
-func newRepo(db *pgxpool.Pool) Repo {
+func NewRepo(db *pgxpool.Pool) Repo {
 	return Repo(&repo{db})
 }
 

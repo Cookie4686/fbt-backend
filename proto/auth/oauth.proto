@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package oauth;
+option go_package = "internal/domain/auth/features/oauth/pb";
+
+import "common/session.proto";
+
+service OAuth {
+  rpc Status (StatusRequest) returns (StatusReply) {}
+  rpc Register (RegisterRequest) returns (RegisterReply) {}
+  rpc Login (LoginRequest) returns (LoginReply) {}
+}
+
+message StatusRequest {}
+message StatusReply {
+    repeated string providers = 1;
+}
+
+message LoginRequest {
+  string token = 1;
+  string email = 2;
+  string provider = 3;
+}
+message LoginReply {
+    bool registrationNeeded = 1;
+    string registrationID = 2;
+    common.Session session = 3;
+}
+
+message RegisterRequest {
+    string registrationID = 1;
+    string provider = 2;
+    string TokenID = 3;
+    string username = 4;
+    string email = 5;
+    string password = 6;
+    bool passwordEnabled = 7;
+}
+message RegisterReply {
+    common.Session session = 1;
+}

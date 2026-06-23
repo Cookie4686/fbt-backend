@@ -5,10 +5,10 @@ import (
 	"fbt/backend/internal/api"
 	"fbt/backend/internal/config"
 	"fbt/backend/internal/util"
+	"net"
 
 	"fmt"
 	"log"
-	"net/http"
 
 	"go.uber.org/zap"
 )
@@ -31,7 +31,15 @@ func main() {
 		logger.Fatal("DB Init", zap.Error(err))
 	}
 
-	apiHandler := api.NewAPIHandler(logger, db, cfg)
-	logger.Info("Server Started", zap.String("URL", fmt.Sprintf("localhost:%v", cfg.API.PORT)))
-	http.ListenAndServe(fmt.Sprintf(":%v", cfg.API.PORT), apiHandler)
+	s := api.NewGRPCServer(logger, db, cfg)
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.API.PORT))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	log.Printf("server listening at %v", lis.Addr())
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }

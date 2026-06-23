@@ -4,59 +4,67 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"fbt/backend/internal/domain/auth/common"
+	"fbt/backend/internal/domain/auth/features/oauth/pb"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/util"
-	"net/http"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/argon2"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type con struct {
+type Server struct {
 	service service.Service
 	repo    Repo
+
+	pb.UnimplementedOAuthServer
 }
 
-func NewController(service service.Service, db *pgxpool.Pool) Controller {
-	return Controller(con{service: service, repo: newRepo(db)})
+func NewServer(service service.Service, repo Repo) *Server {
+	return &Server{service, repo, pb.UnimplementedOAuthServer{}}
 }
 
-func (s con) Register(ctx context.Context, body *RegisterPayload) (*RegisterResponse, error) {
-	oauthRegistration, err := s.repo.GetOAuthRegistration(ctx, body.RegistrationID)
+func RegisterService(service service.Service, repo Repo, s *grpc.Server) {
+	pb.RegisterOAuthServer(s, NewServer(service, repo))
+}
+
+func (s *Server) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterReply, error) {
+	oauthRegistration, err := s.repo.GetOAuthRegistration(ctx, in.RegistrationID)
 	if err != nil {
 		return nil, err
 	}
 
 	if time.Now().After(oauthRegistration.ExpiresAt) {
-		if err := s.repo.DeleteOAuthRegistration(ctx, body.Provider, body.TokenID); err != nil {
+		if err := s.repo.DeleteOAuthRegistration(ctx, in.Provider, in.TokenID); err != nil {
 			return nil, err
 		} else {
 			return nil, errors.RegistrationSessionExpire
 		}
 	}
 
-	if (oauthRegistration.RegistrationID != body.RegistrationID) ||
-		(oauthRegistration.IDToken != body.TokenID) {
+	if (oauthRegistration.RegistrationID != in.RegistrationID) ||
+		(oauthRegistration.IDToken != in.TokenID) {
 		return nil, errors.BadRequest
 	}
 
 	user := &model.User{
 		Id:              util.GenerateBase32UUID(),
-		Username:        body.Username,
-		Email:           body.Email,
+		Username:        in.Username,
+		Email:           in.Email,
 		EmailVerified:   false,
 		Password:        pgtype.Text{String: "", Valid: false},
 		PasswordSalt:    pgtype.Text{String: "", Valid: false},
-		PasswordEnabled: body.PasswordEnabled,
+		PasswordEnabled: in.PasswordEnabled,
 	}
-	if body.PasswordEnabled {
+	if in.PasswordEnabled {
 		salt := make([]byte, 16)
 		rand.Read(salt)
-		passwordHash := argon2.IDKey([]byte(body.Password), salt, 2, 19*1024, 1, 32)
+		passwordHash := argon2.IDKey([]byte(in.Password), salt, 2, 19*1024, 1, 32)
 		user.Password = pgtype.Text{String: base64.StdEncoding.EncodeToString(passwordHash), Valid: true}
 		user.PasswordSalt = pgtype.Text{String: base64.StdEncoding.EncodeToString(salt), Valid: true}
 	}
@@ -67,16 +75,22 @@ func (s con) Register(ctx context.Context, body *RegisterPayload) (*RegisterResp
 		ExpiresAt:         time.Now().Add(model.SessionExpiresIn),
 		TwoFactorVerified: false,
 	}
-	err = s.repo.OAuthRegister(ctx, body.RegistrationID, user, session)
+	err = s.repo.OAuthRegister(ctx, in.RegistrationID, user, session)
 	if err != nil {
 		return nil, err
 	}
 
-	return &RegisterResponse{StatusCode: http.StatusOK, Payload: session}, nil
+	return &pb.RegisterReply{
+		Session: &common.Session{
+			Id:                session.Id,
+			UserID:            session.UserId,
+			TwoFactorVerified: session.TwoFactorVerified,
+			ExpiresAt:         timestamppb.New(session.ExpiresAt),
+		}}, nil
 }
 
-func (s con) Login(ctx context.Context, body *LoginPayload) (*LoginResponse, error) {
-	userOAuth, err := s.repo.GetUserOAuth(ctx, body.Provider, body.IDToken)
+func (s *Server) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginReply, error) {
+	userOAuth, err := s.repo.GetUserOAuth(ctx, in.Provider, in.Token)
 	if err != nil && err != errors.NotFound {
 		return nil, err
 	}
@@ -85,11 +99,11 @@ func (s con) Login(ctx context.Context, body *LoginPayload) (*LoginResponse, err
 	if err == nil {
 		// Already Register OAuth
 		userId = userOAuth.UserID
-	} else if body.Email != nil {
-		user, err := s.service.GetUserByEmail(ctx, *body.Email)
+	} else if in.Email != "" {
+		user, err := s.service.GetUserByEmail(ctx, in.Email)
 		if err == nil {
 			// Link OAuth to existing email
-			err := s.repo.LinkOAuth(ctx, body.Provider, user.Id, body.IDToken)
+			err := s.repo.LinkOAuth(ctx, in.Provider, user.Id, in.Token)
 			if err != nil {
 				return nil, err
 			}
@@ -104,36 +118,44 @@ func (s con) Login(ctx context.Context, body *LoginPayload) (*LoginResponse, err
 		if err != nil {
 			return nil, err
 		}
-		return &LoginResponse{StatusCode: http.StatusOK, Payload: &LoginResponsePayload{
-			Session:            session,
+		return &pb.LoginReply{
 			RegistrationNeeded: false,
-		}}, nil
+			Session: &common.Session{
+				Id:                session.Id,
+				UserID:            session.UserId,
+				TwoFactorVerified: session.TwoFactorVerified,
+				ExpiresAt:         timestamppb.New(session.ExpiresAt),
+			},
+		}, nil
 	} else {
 		// No OAuth and No Email Registration
 		oauthRegistration := &model.OauthRegistration{
 			RegistrationID: util.GenerateBase32UUID(),
-			IDToken:        body.IDToken,
+			IDToken:        in.Token,
 			ExpiresAt:      time.Now().Add(model.SessionExpiresIn),
 		}
 
-		err := s.repo.CreateOAuthRegistration(ctx, body.Provider, oauthRegistration)
+		err := s.repo.CreateOAuthRegistration(ctx, in.Provider, oauthRegistration)
 		if err != nil {
 			return nil, err
 		}
-		return &LoginResponse{StatusCode: http.StatusOK, Payload: &LoginResponsePayload{
+		return &pb.LoginReply{
 			RegistrationNeeded: true,
-			RegistrationId:     &oauthRegistration.RegistrationID,
-		}}, nil
+			RegistrationID:     oauthRegistration.RegistrationID,
+		}, nil
 	}
 }
 
-func (s con) Status(ctx context.Context, auth *model.Auth) (*StatusResponse, error) {
+func (s *Server) Status(ctx context.Context, in *pb.StatusRequest) (*pb.StatusReply, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	auth := ctx.Value("auth").(*model.Auth)
+
 	providers, err := s.repo.GetUserProvider(ctx, auth.User.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &StatusResponse{StatusCode: http.StatusOK, Payload: &StatusResponsePaylaod{
-		Providers: providers,
-	}}, nil
+	return &pb.StatusReply{Providers: providers}, nil
 }

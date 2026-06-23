@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package common;
+option go_package = "fbt/backend/internal/domain/auth/common";
+
+import "google/protobuf/timestamp.proto";
+
+message Session {
+  string id = 1;
+  string userID = 2;
+  bool twoFactorVerified = 3;
+  google.protobuf.Timestamp expiresAt= 4;
+}
