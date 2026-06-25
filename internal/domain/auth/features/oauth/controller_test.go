@@ -12,14 +12,14 @@ import (
 )
 
 func TestOAuth(t *testing.T) {
-	ctx, _, conn := test.NewTestConnection(t, 1234)
+	_, conn := test.NewTestLocalAPI(t)
 
 	client := pb.NewOAuthClient(conn)
 
 	var registrationID string
 
 	t.Run("Login", func(t *testing.T) {
-		res, err := client.Login(ctx, &pb.LoginRequest{
+		res, err := client.Login(t.Context(), &pb.LoginRequest{
 			Token:    "token",
 			Email:    "test@email.com",
 			Provider: "google",
@@ -33,7 +33,7 @@ func TestOAuth(t *testing.T) {
 
 	var session *common.Session
 	t.Run("Register", func(t *testing.T) {
-		res, err := client.Register(ctx, &pb.RegisterRequest{
+		res, err := client.Register(t.Context(), &pb.RegisterRequest{
 			Username:        "test",
 			Email:           "test@email.com",
 			Password:        "12345678",

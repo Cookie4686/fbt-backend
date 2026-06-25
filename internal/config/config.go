@@ -19,9 +19,12 @@ type Config struct {
 	ENCRYPTION_KEY string `env:"ENCRYPTION_KEY" envDefault:""`
 }
 
-func LoadConfig() (*Config, error) {
+func LoadConfig(path string) (*Config, error) {
+	if path == "" {
+		path = ".env"
+	}
 	var cfg Config
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load(path); err != nil {
 		return nil, err
 	}
 

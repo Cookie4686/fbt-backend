@@ -78,7 +78,7 @@ func (s *Server) TOTPUpsertKey(ctx context.Context, in *pb.TOTPUpsertRequest) (*
 		return nil, err
 	}
 
-	session, err := s.service.CreateSession(ctx, auth.User.Id)
+	session, err := s.service.CreateSession(ctx, auth.User.Id, true)
 	if err != nil {
 		return nil, err
 	}

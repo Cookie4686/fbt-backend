@@ -114,7 +114,7 @@ func (s *Server) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginReply
 	}
 
 	if userId != "" {
-		session, err := s.service.CreateSession(ctx, userId)
+		session, err := s.service.CreateSession(ctx, userId, false)
 		if err != nil {
 			return nil, err
 		}

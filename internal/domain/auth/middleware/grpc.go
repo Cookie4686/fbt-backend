@@ -20,7 +20,7 @@ func IsPrivateRoute(fullMethod string) bool {
 	}
 }
 
-func (s *middleware) UnaryInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+func (s *middleware) AuthInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 	// Intercept Private route
 	if IsPrivateRoute(info.FullMethod) {
 		// authentication (token verification)
@@ -45,8 +45,17 @@ func (s *middleware) UnaryInterceptor(ctx context.Context, req any, info *grpc.U
 	}
 
 	m, err := handler(ctx, req)
+
+	return m, err
+}
+
+func (s *middleware) LoggerInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+	m, err := handler(ctx, req)
+
 	if err != nil {
-		s.Logger.Error("RPC failed with error", zap.Error(err))
+		s.Logger.Error(info.FullMethod, zap.String("error", err.Error()))
+	} else {
+		s.Logger.Info(info.FullMethod)
 	}
 	return m, err
 }

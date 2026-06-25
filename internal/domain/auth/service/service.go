@@ -7,7 +7,7 @@ import (
 )
 
 type Service interface {
-	CreateSession(ctx context.Context, userId string) (*model.Session, error)
+	CreateSession(ctx context.Context, userId string, twoFactorVerified bool) (*model.Session, error)
 	Validate(ctx context.Context, sessionId string) (*model.Auth, error)
 	UpdateSessionExpiration(context.Context, *model.Session) error
 	InvalidateSession(context.Context, *model.Session) error

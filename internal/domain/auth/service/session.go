@@ -12,12 +12,12 @@ import (
 
 // SECURITY: Do we need to hash session id?
 
-func (s *service) CreateSession(ctx context.Context, userId string) (*model.Session, error) {
+func (s *service) CreateSession(ctx context.Context, userId string, twoFactorVerified bool) (*model.Session, error) {
 	session := &model.Session{
 		Id:                util.GenerateBase64UUID(),
 		UserId:            userId,
 		ExpiresAt:         time.Now().Add(model.SessionExpiresIn),
-		TwoFactorVerified: false,
+		TwoFactorVerified: twoFactorVerified,
 	}
 
 	query := `

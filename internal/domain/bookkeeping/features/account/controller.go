@@ -2,62 +2,121 @@ package account
 
 import (
 	"context"
-	auth "fbt/backend/internal/domain/auth/model"
+	"fbt/backend/internal/domain/bookkeeping/features/account/pb"
 	"fbt/backend/internal/domain/bookkeeping/model"
 	"fbt/backend/internal/domain/bookkeeping/service"
-	"net/http"
+	"fbt/backend/internal/util"
+
+	"google.golang.org/grpc"
 )
 
-type con struct {
+type Server struct {
 	service service.Service
 	repo    Repo
+
+	pb.UnimplementedAccountServiceServer
 }
 
-func NewController(service service.Service, repo Repo) Controller {
-	return Controller(&con{service, repo})
+func NewServer(service service.Service, repo Repo) *Server {
+	return &Server{service, repo, pb.UnimplementedAccountServiceServer{}}
 }
 
-func (c *con) GetAll(ctx context.Context, auth *auth.Auth) (*GetAllResponse, error) {
-	accounts, err := c.repo.GetAll(ctx, auth.Session.UserId)
+func RegisterService(service service.Service, repo Repo, s *grpc.Server) {
+	pb.RegisterAccountServiceServer(s, NewServer(service, repo))
+}
+
+func (c *Server) GetAll(ctx context.Context, in *pb.GetAllRequest) (*pb.GetAllReply, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	auth, err := util.GetAuth(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &GetAllResponse{StatusCode: http.StatusOK, Payload: &accounts}, nil
+
+	accs, err := c.repo.GetAll(ctx, auth.Session.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	accounts := make([]*pb.Account, len(*accs))
+	for idx, a := range *accs {
+		accounts[idx] = toCommonAccount(&a)
+	}
+
+	return &pb.GetAllReply{Account: accounts}, nil
 }
 
-func (c *con) Create(ctx context.Context, auth *auth.Auth, payload *CreatePayload) (*CreateResponse, error) {
-	account := model.Account{
-		Name:    payload.Name,
-		IsDebit: payload.IsDebit,
+func (c *Server) Create(ctx context.Context, in *pb.CreateRequest) (*pb.CreateReply, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	auth, err := util.GetAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	account := &model.Account{
+		Name:    in.Name,
+		IsDebit: in.IsDebit,
 		UserId:  auth.Session.UserId,
 	}
-	accountID, err := c.repo.Create(ctx, &account)
+
+	accountID, err := c.repo.Create(ctx, account)
 	if err != nil {
 		return nil, err
 	}
 
 	account.ID = accountID
-	return &CreateResponse{StatusCode: http.StatusOK, Payload: &account}, nil
+	return &pb.CreateReply{Account: toCommonAccount(account)}, nil
 }
 
-func (c *con) Update(ctx context.Context, auth *auth.Auth, payload *UpdatePayload) (*UpdateResponse, error) {
+func (c *Server) Update(ctx context.Context, in *pb.UpdateRequest) (*pb.UpdateReply, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	auth, err := util.GetAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	account := &model.Account{
-		ID:      payload.ID,
-		Name:    payload.Name,
-		IsDebit: payload.IsDebit,
+		ID:      in.Id,
+		Name:    in.Name,
+		IsDebit: in.IsDebit,
 		UserId:  auth.Session.UserId,
 	}
-	err := c.repo.Update(ctx, account)
+
+	err = c.repo.Update(ctx, account)
 	if err != nil {
 		return nil, err
 	}
-	return &UpdateResponse{StatusCode: http.StatusOK, Payload: account}, nil
+
+	return &pb.UpdateReply{Account: toCommonAccount(account)}, nil
 }
 
-func (c *con) Delete(ctx context.Context, auth *auth.Auth, payload *DeletePayload) (*DeleteResponse, error) {
-	err := c.repo.Delete(ctx, auth.Session.UserId, payload.ID)
+func (c *Server) Delete(ctx context.Context, in *pb.DeleteRequest) (*pb.DeleteReply, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	auth, err := util.GetAuth(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &DeleteResponse{StatusCode: http.StatusOK, Payload: nil}, nil
+
+	err = c.repo.Delete(ctx, auth.Session.UserId, in.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.DeleteReply{}, nil
+}
+
+func toCommonAccount(account *model.Account) *pb.Account {
+	return &pb.Account{
+		Id:      account.ID,
+		Name:    account.Name,
+		IsDebit: account.IsDebit,
+		UserID:  account.UserId,
+	}
 }

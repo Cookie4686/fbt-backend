@@ -12,7 +12,8 @@ import (
 
 type Middleware interface {
 	Auth(next http.Handler) http.Handler
-	UnaryInterceptor(context.Context, any, *grpc.UnaryServerInfo, grpc.UnaryHandler) (any, error)
+	AuthInterceptor(context.Context, any, *grpc.UnaryServerInfo, grpc.UnaryHandler) (any, error)
+	LoggerInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error)
 }
 
 type middleware struct {

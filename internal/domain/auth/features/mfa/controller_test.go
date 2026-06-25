@@ -13,7 +13,7 @@ import (
 )
 
 func TestMFA(t *testing.T) {
-	ctx, _, conn := test.NewTestConnection(t, 1234)
+	ctx, conn := test.NewTestLocalAPI(t)
 
 	session := test.SetupUser(t, ctx, conn)
 
@@ -32,7 +32,7 @@ func TestMFA(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("TOTP Upsert", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(ctx, "session_id", session.Id)
+		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
 
 		res, err := client.TOTPUpsertKey(ctx, &pb.TOTPUpsertRequest{
 			Key: key.Secret(),
@@ -45,7 +45,7 @@ func TestMFA(t *testing.T) {
 	})
 
 	t.Run("TOTP Validate", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(ctx, "session_id", session.Id)
+		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
 
 		code, err := totp.GenerateCode(key.Secret(), time.Now())
 		require.NoError(t, err)

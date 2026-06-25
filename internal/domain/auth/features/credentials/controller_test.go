@@ -9,7 +9,7 @@ import (
 )
 
 func TestCredentials(t *testing.T) {
-	ctx, ctr, conn := test.NewTestConnection(t, 1234)
+	ctx, conn := test.NewTestLocalAPI(t)
 
 	client := pb.NewCredentialsClient(conn)
 
@@ -17,6 +17,8 @@ func TestCredentials(t *testing.T) {
 	password := "12345678"
 
 	t.Run("Register", func(t *testing.T) {
+		ctx := t.Context()
+
 		res, err := client.Register(ctx, &pb.RegisterRequest{
 			Username: username,
 			Email:    "test@email.com",
@@ -36,6 +38,4 @@ func TestCredentials(t *testing.T) {
 
 		require.Equal(t, false, res.Session.TwoFactorVerified)
 	})
-
-	ctr.Restore(ctx)
 }

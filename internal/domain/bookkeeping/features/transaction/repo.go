@@ -14,6 +14,13 @@ type repo struct {
 	db *pgxpool.Pool
 }
 
+type Repo interface {
+	GetAll(ctx context.Context, userID string) (*[]model.TransactionEntry, error)
+	Create(context.Context, *model.TransactionEntry) (transactionID int64, err error)
+	Update(context.Context, *model.TransactionEntry) error
+	Delete(ctx context.Context, userID string, transactionID int64) error
+}
+
 func NewRepo(db *pgxpool.Pool) Repo {
 	return Repo(&repo{db: db})
 }

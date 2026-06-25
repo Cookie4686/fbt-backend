@@ -6,6 +6,7 @@ import (
 	"fbt/backend/internal/domain/auth/features/session/pb"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
+	"fbt/backend/internal/util"
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -29,12 +30,11 @@ func (s *Server) Validate(ctx context.Context, in *pb.ValidateRequest) (*pb.Vali
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth := ctx.Value("auth").(*model.Auth)
-
-	auth, err := s.service.Validate(ctx, auth.Session.Id)
+	auth, err := util.GetAuth(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	return &pb.ValidateReply{
 		User: &common.User{
 			Id:              auth.User.Id,
@@ -56,9 +56,12 @@ func (s *Server) Logout(ctx context.Context, in *pb.LogoutRequest) (*pb.LogoutRe
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth := ctx.Value("auth").(*model.Auth)
+	auth, err := util.GetAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	err := s.service.InvalidateSession(ctx, &model.Session{Id: auth.Session.Id})
+	err = s.service.InvalidateSession(ctx, &model.Session{Id: auth.Session.Id})
 	if err != nil {
 		return nil, err
 	}

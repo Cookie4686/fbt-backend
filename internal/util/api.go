@@ -1,7 +1,9 @@
 package util
 
 import (
+	"context"
 	"encoding/json"
+	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/errors"
 	"net/http"
 
@@ -52,4 +54,12 @@ func ExtractPayload[T any](r *http.Request) (*T, error) {
 		return nil, err
 	}
 	return &body, nil
+}
+
+func GetAuth(ctx context.Context) (*model.Auth, error) {
+	a, ok := ctx.Value("auth").(*model.Auth)
+	if !ok {
+		return nil, errors.MissingMetadata
+	}
+	return a, nil
 }

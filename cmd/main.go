@@ -16,7 +16,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	cfg, err := config.LoadConfig()
+	cfg, err := config.LoadConfig(".env")
 	if err != nil {
 		log.Fatal(err)
 	}

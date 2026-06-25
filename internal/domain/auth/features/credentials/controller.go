@@ -88,7 +88,7 @@ func (s *Server) Login(ctx context.Context, body *pb.LoginRequest) (*pb.LoginRep
 	passwordHash := argon2.IDKey([]byte(body.Password), storedSalt, 2, 19*1024, 1, 32)
 	if subtle.ConstantTimeCompare(passwordHash, storedHash) == 1 {
 		// Create Session in Database
-		session, err := s.service.CreateSession(ctx, user.Id)
+		session, err := s.service.CreateSession(ctx, user.Id, false)
 		if err != nil {
 			return nil, err
 		}

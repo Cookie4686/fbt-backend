@@ -11,14 +11,14 @@ import (
 )
 
 func TestSession(t *testing.T) {
-	ctx, _, conn := test.NewTestConnection(t, 1234)
+	ctx, conn := test.NewTestLocalAPI(t)
 
 	session := test.SetupUser(t, ctx, conn)
 
 	client := pb.NewSessionClient(conn)
 
 	t.Run("Validate", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(ctx, "session_id", session.Id)
+		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
 
 		res, err := client.Validate(ctx, &pb.ValidateRequest{})
 		require.NoError(t, err)
@@ -28,14 +28,14 @@ func TestSession(t *testing.T) {
 	})
 
 	t.Run("Logout", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(ctx, "session_id", session.Id)
+		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
 
 		_, err := client.Logout(ctx, &pb.LogoutRequest{})
 		require.NoError(t, err)
 	})
 
 	t.Run("Validate", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(ctx, "session_id", session.Id)
+		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
 
 		_, err := client.Validate(ctx, &pb.ValidateRequest{})
 		require.Error(t, err)

@@ -7,6 +7,7 @@ import (
 	"fbt/backend/internal/util"
 	"fmt"
 	"log"
+	"math/rand/v2"
 	"net"
 	"os"
 	"path/filepath"
@@ -35,9 +36,9 @@ func NewTestContainer(t *testing.T, dbName string, user string, password string)
 		postgres.BasicWaitStrategies(),
 		postgres.WithSQLDriver("pgx"),
 	)
+	require.NoError(t, err)
 
 	testcontainers.CleanupContainer(t, ctr)
-	require.NoError(t, err)
 
 	wd, err := os.Getwd()
 	require.NoError(t, err)
@@ -82,7 +83,7 @@ func NewTestAPI(t *testing.T) (context.Context, *postgres.PostgresContainer, *gr
 
 	ctx, ctr, db := NewTestContainer(t, name, user, password)
 
-	cfg, err := config.LoadConfig()
+	cfg, err := config.LoadConfig(".env.test")
 	require.NoError(t, err)
 
 	logger, err := util.NewLogger(cfg)
@@ -93,8 +94,10 @@ func NewTestAPI(t *testing.T) (context.Context, *postgres.PostgresContainer, *gr
 	return ctx, ctr, svr
 }
 
-func NewTestConnection(t *testing.T, port int) (context.Context, *postgres.PostgresContainer, *grpc.ClientConn) {
+func NewTestConnection(t *testing.T) (context.Context, *postgres.PostgresContainer, *grpc.ClientConn) {
 	ctx, ctr, svr := NewTestAPI(t)
+
+	port := 1200 + rand.IntN(20)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	require.NoError(t, err)
