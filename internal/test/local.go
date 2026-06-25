@@ -2,8 +2,7 @@ package test
 
 import (
 	"context"
-	"fbt/backend/internal/api"
-	"fbt/backend/internal/config"
+	"fbt/backend/internal/server"
 	"fbt/backend/internal/util"
 	"fmt"
 	"net"
@@ -22,20 +21,14 @@ func NewTestLocalAPI(t *testing.T) (context.Context, *grpc.ClientConn) {
 
 	ChangeDirectory(t)
 
-	cfg, err := config.LoadConfig(".env.test")
+	d, err := util.NewDependency(ctx, ".env.test")
 	require.NoError(t, err)
 
-	logger, err := util.NewLogger(cfg)
-	require.NoError(t, err)
+	ClearDatabase(t, ctx, d.DB)
 
-	db, err := util.NewDatabasePool(ctx, cfg)
-	require.NoError(t, err)
+	s := server.NewServer(d)
 
-	ClearDatabase(t, ctx, db)
-
-	s := api.NewGRPCServer(logger, db, cfg)
-
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.API.PORT))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", d.CFG.API.PORT))
 	require.NoError(t, err)
 
 	go func() {

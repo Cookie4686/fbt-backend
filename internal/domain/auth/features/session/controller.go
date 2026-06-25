@@ -6,7 +6,7 @@ import (
 	"fbt/backend/internal/domain/auth/features/session/pb"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
-	"fbt/backend/internal/util"
+	"fbt/backend/internal/interceptor"
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -30,7 +30,7 @@ func (s *Server) Validate(ctx context.Context, in *pb.ValidateRequest) (*pb.Vali
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth, err := util.GetAuth(ctx)
+	auth, err := interceptor.FromAuthContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (s *Server) Logout(ctx context.Context, in *pb.LogoutRequest) (*pb.LogoutRe
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth, err := util.GetAuth(ctx)
+	auth, err := interceptor.FromAuthContext(ctx)
 	if err != nil {
 		return nil, err
 	}

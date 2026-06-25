@@ -5,7 +5,7 @@ import (
 	"fbt/backend/internal/domain/bookkeeping/features/account/pb"
 	"fbt/backend/internal/domain/bookkeeping/model"
 	"fbt/backend/internal/domain/bookkeeping/service"
-	"fbt/backend/internal/util"
+	"fbt/backend/internal/interceptor"
 
 	"google.golang.org/grpc"
 )
@@ -29,7 +29,7 @@ func (c *Server) GetAll(ctx context.Context, in *pb.GetAllRequest) (*pb.GetAllRe
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth, err := util.GetAuth(ctx)
+	auth, err := interceptor.FromAuthContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (c *Server) Create(ctx context.Context, in *pb.CreateRequest) (*pb.CreateRe
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth, err := util.GetAuth(ctx)
+	auth, err := interceptor.FromAuthContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (c *Server) Update(ctx context.Context, in *pb.UpdateRequest) (*pb.UpdateRe
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth, err := util.GetAuth(ctx)
+	auth, err := interceptor.FromAuthContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (c *Server) Delete(ctx context.Context, in *pb.DeleteRequest) (*pb.DeleteRe
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth, err := util.GetAuth(ctx)
+	auth, err := interceptor.FromAuthContext(ctx)
 	if err != nil {
 		return nil, err
 	}

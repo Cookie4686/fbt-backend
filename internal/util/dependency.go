@@ -2,7 +2,6 @@ package util
 
 import (
 	"context"
-	"fbt/backend/internal/config"
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -11,19 +10,23 @@ import (
 
 type Dependency struct {
 	Logger *zap.Logger
+	CFG    *Config
 	DB     *pgxpool.Pool
-	CFG    *config.Config
 }
 
-func NewDependency(logger *zap.Logger, db *pgxpool.Pool, cfg *config.Config) *Dependency {
-	return &Dependency{
-		Logger: logger,
-		DB:     db,
-		CFG:    cfg,
+func NewDependency(ctx context.Context, envFilePath string) (*Dependency, error) {
+	if cfg, err := NewConfig(envFilePath); err != nil {
+		return nil, err
+	} else if logger, err := NewLogger(cfg); err != nil {
+		return nil, err
+	} else if db, err := NewDatabasePool(ctx, cfg); err != nil {
+		return nil, err
+	} else {
+		return &Dependency{Logger: logger, CFG: cfg, DB: db}, nil
 	}
 }
 
-func NewLogger(cfg *config.Config) (logger *zap.Logger, err error) {
+func NewLogger(cfg *Config) (logger *zap.Logger, err error) {
 	if cfg.ENV == "" || cfg.ENV == "development" {
 		return zap.NewDevelopment()
 	} else {
@@ -33,7 +36,7 @@ func NewLogger(cfg *config.Config) (logger *zap.Logger, err error) {
 	}
 }
 
-func NewDatabasePool(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
+func NewDatabasePool(ctx context.Context, cfg *Config) (*pgxpool.Pool, error) {
 	dbConfig, err := pgxpool.ParseConfig(fmt.Sprintf(
 		"user=%v password=%v port=%v dbname=%v",
 		cfg.DB.PGUSER, cfg.DB.PGPASSWORD, cfg.DB.PGPORT, cfg.DB.PGDATABASE),

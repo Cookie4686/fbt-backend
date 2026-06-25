@@ -4,23 +4,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/base32"
 	"encoding/base64"
 	"fmt"
 	"io"
 )
-
-func GenerateBase32UUID() string {
-	bytes := make([]byte, 15)
-	rand.Read(bytes)
-	return base32.StdEncoding.EncodeToString(bytes)
-}
-
-func GenerateBase64UUID() string {
-	bytes := make([]byte, 18)
-	rand.Read(bytes)
-	return base64.StdEncoding.EncodeToString(bytes)
-}
 
 func Decrypt(encryptedValue string, encryptionKey string) (*string, error) {
 	key, err := base64.StdEncoding.DecodeString(encryptionKey)
@@ -31,7 +18,7 @@ func Decrypt(encryptedValue string, encryptionKey string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	ciphertext, err := DecryptGCM(value, key)
+	ciphertext, err := decryptGCM(value, key)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +31,7 @@ func Encrypt(value string, encryptionKey string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	ciphertext, err := EncryptGCM([]byte(value), key)
+	ciphertext, err := encryptGCM([]byte(value), key)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +39,7 @@ func Encrypt(value string, encryptionKey string) (*string, error) {
 	return &encryptedValue, nil
 }
 
-func EncryptGCM(plaintext, key []byte) ([]byte, error) {
+func encryptGCM(plaintext, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -71,7 +58,7 @@ func EncryptGCM(plaintext, key []byte) ([]byte, error) {
 	return gcm.Seal(nonce, nonce, plaintext, nil), nil
 }
 
-func DecryptGCM(ciphertext, key []byte) ([]byte, error) {
+func decryptGCM(ciphertext, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err

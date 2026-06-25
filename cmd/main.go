@@ -2,8 +2,7 @@ package main
 
 import (
 	"context"
-	"fbt/backend/internal/api"
-	"fbt/backend/internal/config"
+	"fbt/backend/internal/server"
 	"fbt/backend/internal/util"
 	"net"
 
@@ -16,30 +15,22 @@ import (
 func main() {
 	ctx := context.Background()
 
-	cfg, err := config.LoadConfig(".env")
+	d, err := util.NewDependency(ctx, ".env")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to create dependency: %v", err)
 	}
 
-	logger, err := util.NewLogger(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
+	s := server.NewServer(d)
 
-	db, err := util.NewDatabasePool(ctx, cfg)
-	if err != nil {
-		logger.Fatal("DB Init", zap.Error(err))
-	}
-
-	s := api.NewGRPCServer(logger, db, cfg)
-
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.API.PORT))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
-	log.Printf("server listening at %v", lis.Addr())
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+	if lis, err := net.Listen("tcp", fmt.Sprintf(":%d", d.CFG.API.PORT)); err != nil {
+		d.Logger.Fatal("failed to listen", zap.Error(err))
+	} else if err := s.Serve(lis); err != nil {
+		d.Logger.Fatal("failed to serve", zap.Error(err))
+	} else {
+		d.Logger.Info(
+			"server started",
+			zap.String("network", lis.Addr().Network()),
+			zap.String("address", lis.Addr().String()),
+		)
 	}
 }

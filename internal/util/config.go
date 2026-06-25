@@ -1,4 +1,4 @@
-package config
+package util
 
 import (
 	"github.com/caarlos0/env/v11"
@@ -19,18 +19,18 @@ type Config struct {
 	ENCRYPTION_KEY string `env:"ENCRYPTION_KEY" envDefault:""`
 }
 
-func LoadConfig(path string) (*Config, error) {
+func NewConfig(path string) (*Config, error) {
 	if path == "" {
 		path = ".env"
 	}
+
 	var cfg Config
+
 	if err := godotenv.Load(path); err != nil {
 		return nil, err
-	}
-
-	if err := env.Parse(&cfg); err != nil {
+	} else if err := env.Parse(&cfg); err != nil {
 		return nil, err
+	} else {
+		return &cfg, nil
 	}
-
-	return &cfg, nil
 }

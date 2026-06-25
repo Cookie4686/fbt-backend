@@ -2,8 +2,7 @@ package test
 
 import (
 	"context"
-	"fbt/backend/internal/api"
-	"fbt/backend/internal/config"
+	"fbt/backend/internal/server"
 	"fbt/backend/internal/util"
 	"fmt"
 	"log"
@@ -83,13 +82,17 @@ func NewTestAPI(t *testing.T) (context.Context, *postgres.PostgresContainer, *gr
 
 	ctx, ctr, db := NewTestContainer(t, name, user, password)
 
-	cfg, err := config.LoadConfig(".env.test")
+	cfg, err := util.NewConfig(".env.test")
 	require.NoError(t, err)
 
 	logger, err := util.NewLogger(cfg)
 	require.NoError(t, err)
 
-	svr := api.NewGRPCServer(logger, db, cfg)
+	svr := server.NewServer(&util.Dependency{
+		Logger: logger,
+		DB:     db,
+		CFG:    cfg,
+	})
 
 	return ctx, ctr, svr
 }

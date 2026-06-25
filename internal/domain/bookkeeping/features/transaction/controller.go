@@ -5,7 +5,7 @@ import (
 	"fbt/backend/internal/domain/bookkeeping/features/transaction/pb"
 	"fbt/backend/internal/domain/bookkeeping/model"
 	"fbt/backend/internal/domain/bookkeeping/service"
-	"fbt/backend/internal/util"
+	"fbt/backend/internal/interceptor"
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -27,7 +27,7 @@ func RegisterService(service service.Service, repo Repo, s *grpc.Server) {
 }
 
 func (c *Server) GetAll(ctx context.Context, in *pb.GetAllRequest) (*pb.GetAllReply, error) {
-	auth, err := util.GetAuth(ctx)
+	auth, err := interceptor.FromAuthContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (c *Server) Update(ctx context.Context, in *pb.UpdateRequest) (*pb.UpdateRe
 }
 
 func (c *Server) Delete(ctx context.Context, in *pb.DeleteRequest) (*pb.DeleteReply, error) {
-	auth, err := util.GetAuth(ctx)
+	auth, err := interceptor.FromAuthContext(ctx)
 	if err != nil {
 		return nil, err
 	}
