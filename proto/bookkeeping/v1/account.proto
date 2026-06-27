@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package bookkeeping.v1;
+
+import "bookkeeping/v1/common.proto";
+import "buf/validate/validate.proto";
+
+service AccountService {
+  rpc GetAll(AccountServiceGetAllRequest) returns (AccountServiceGetAllResponse) {}
+  rpc Create(AccountServiceCreateRequest) returns (AccountServiceCreateResponse) {}
+  rpc Update(AccountServiceUpdateRequest) returns (AccountServiceUpdateResponse) {}
+  rpc Delete(AccountServiceDeleteRequest) returns (AccountServiceDeleteResponse) {}
+}
+
+message AccountServiceGetAllRequest {}
+message AccountServiceGetAllResponse {
+  repeated Account account = 1 [(buf.validate.field).required = true];
+}
+
+message AccountServiceCreateRequest {
+  string name = 1 [(buf.validate.field).required = true];
+  bool is_debit = 2;
+}
+message AccountServiceCreateResponse {
+  Account account = 1 [(buf.validate.field).required = true];
+}
+
+message AccountServiceUpdateRequest {
+  int32 id = 1 [(buf.validate.field).required = true];
+  string name = 2 [(buf.validate.field).required = true];
+  bool is_debit = 3;
+}
+message AccountServiceUpdateResponse {
+  Account account = 1 [(buf.validate.field).required = true];
+}
+
+message AccountServiceDeleteRequest {
+  int32 id = 1 [(buf.validate.field).required = true];
+}
+message AccountServiceDeleteResponse {}

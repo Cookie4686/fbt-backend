@@ -6,22 +6,40 @@ import (
 	"fbt/backend/internal/domain/bookkeeping"
 	"fbt/backend/internal/interceptor"
 	"fbt/backend/internal/util"
+	"fmt"
+	"net/http"
 
-	"google.golang.org/grpc"
+	"connectrpc.com/connect"
+	"connectrpc.com/validate"
 )
 
-func NewServer(d *util.Dependency) *grpc.Server {
+func NewServer(d *util.Dependency) *http.Server {
+	mux := http.NewServeMux()
+
 	service := service.NewService(d)
 
-	m := interceptor.NewMiddleware(d, service)
+	i := interceptor.NewInterceptorProvider(d, service)
 
-	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		grpc.UnaryServerInterceptor(m.Logging),
-		grpc.UnaryServerInterceptor(m.Auth),
-	))
+	opts := connect.WithInterceptors(
+		i.Logging(),
+		i.Auth(),
+		validate.NewInterceptor(),
+	)
 
-	auth.RegisterService(server, d)
-	bookkeeping.RegisterService(server, d)
+	auth.RegisterService(mux, d, opts)
+	bookkeeping.RegisterService(mux, d, opts)
 
-	return server
+	p := new(http.Protocols)
+	p.SetHTTP1(true)
+
+	// Use h2c so we can serve HTTP/2 without TLS.
+	p.SetUnencryptedHTTP2(true)
+
+	server := http.Server{
+		Addr:      fmt.Sprintf(":%d", d.CFG.API.PORT),
+		Handler:   mux,
+		Protocols: p,
+	}
+
+	return &server
 }

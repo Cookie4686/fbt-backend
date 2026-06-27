@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "auth/v1/predefined_string_rules.proto";
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+message Session {
+  string id = 1 [(buf.validate.field).required = true];
+  string user_id = 2 [(buf.validate.field).required = true];
+  bool two_factor_verified = 3;
+  google.protobuf.Timestamp expires_at = 4 [(buf.validate.field).required = true];
+}
+
+message User {
+  string id = 1 [(buf.validate.field).required = true];
+  string username = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(username_component) = true
+  ];
+  string email = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.email = true
+  ];
+  bool email_verified = 4;
+  bool password_enabled = 5;
+}

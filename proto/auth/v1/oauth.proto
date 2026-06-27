@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "auth/v1/common.proto";
+import "auth/v1/predefined_string_rules.proto";
+import "buf/validate/validate.proto";
+
+service OAuthService {
+  rpc Status(OAuthServiceStatusRequest) returns (OAuthServiceStatusResponse) {}
+  rpc Register(OAuthServiceRegisterRequest) returns (OAuthServiceRegisterResponse) {}
+  rpc Login(OAuthServiceLoginRequest) returns (OAuthServiceLoginResponse) {}
+}
+
+message OAuthServiceStatusRequest {}
+message OAuthServiceStatusResponse {
+  repeated string providers = 1 [(buf.validate.field).required = true];
+}
+
+message OAuthServiceLoginRequest {
+  string token = 1 [(buf.validate.field).required = true];
+  string email = 2 [(buf.validate.field).required = true];
+  string provider = 3 [(buf.validate.field).required = true];
+}
+message OAuthServiceLoginResponse {
+  option (buf.validate.message).cel = {
+    id: "registration_id"
+    expression: "this.registration_needed ? has(this.registration_id) : !has(this.registration_id)"
+  };
+  option (buf.validate.message).cel = {
+    id: "session"
+    expression: "this.registration_needed ? !has(this.session) : has(this.session)"
+  };
+
+  bool registration_needed = 1;
+  string registration_id = 2;
+  Session session = 3;
+}
+
+message OAuthServiceRegisterRequest {
+  string registration_id = 1 [(buf.validate.field).required = true];
+  string provider = 2 [(buf.validate.field).required = true];
+  string token_id = 3 [(buf.validate.field).required = true];
+  string username = 4 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.(username_component) = true
+  ];
+  string email = 5 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.email = true
+  ];
+
+  option (buf.validate.message).cel = {
+    id: "password"
+    expression: "this.password_enabled ? has(this.password) : !has(this.password)"
+  };
+  bool password_enabled = 6;
+  string password = 7 [(buf.validate.field).string.(password_component) = true];
+}
+message OAuthServiceRegisterResponse {
+  Session session = 1 [(buf.validate.field).required = true];
+}

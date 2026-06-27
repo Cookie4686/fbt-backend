@@ -2,31 +2,25 @@ package session
 
 import (
 	"context"
-	"fbt/backend/internal/domain/auth/common"
-	"fbt/backend/internal/domain/auth/features/session/pb"
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
+	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/interceptor"
+	"net/http"
 
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/timestamppb"
+	"connectrpc.com/connect"
 )
 
 type Server struct {
 	service service.Service
-
-	pb.UnimplementedSessionServer
 }
 
-func NewServer(service service.Service) *Server {
-	return &Server{service, pb.UnimplementedSessionServer{}}
+func NewServiceHandler(service service.Service, opts ...connect.HandlerOption) (string, http.Handler) {
+	return authv1connect.NewSessionServiceHandler(&Server{service}, opts...)
 }
 
-func RegisterService(service service.Service, s *grpc.Server) {
-	pb.RegisterSessionServer(s, NewServer(service))
-}
-
-func (s *Server) Validate(ctx context.Context, in *pb.ValidateRequest) (*pb.ValidateReply, error) {
+func (s *Server) Validate(ctx context.Context, in *authv1.SessionServiceValidateRequest) (*authv1.SessionServiceValidateResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -35,24 +29,13 @@ func (s *Server) Validate(ctx context.Context, in *pb.ValidateRequest) (*pb.Vali
 		return nil, err
 	}
 
-	return &pb.ValidateReply{
-		User: &common.User{
-			Id:              auth.User.Id,
-			Username:        auth.User.Username,
-			Email:           auth.User.Email,
-			EmailVerified:   auth.User.EmailVerified,
-			PasswordEnabled: auth.User.PasswordEnabled,
-		},
-		Session: &common.Session{
-			Id:                auth.Session.Id,
-			UserID:            auth.Session.UserId,
-			TwoFactorVerified: auth.Session.TwoFactorVerified,
-			ExpiresAt:         timestamppb.New(auth.Session.ExpiresAt),
-		},
+	return &authv1.SessionServiceValidateResponse{
+		Session: auth.Session.ToProto(),
+		User:    auth.User.ToProto(),
 	}, nil
 }
 
-func (s *Server) Logout(ctx context.Context, in *pb.LogoutRequest) (*pb.LogoutReply, error) {
+func (s *Server) Logout(ctx context.Context, in *authv1.SessionServiceLogoutRequest) (*authv1.SessionServiceLogoutResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 

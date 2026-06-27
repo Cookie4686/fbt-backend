@@ -30,9 +30,7 @@ func NewLogger(cfg *Config) (logger *zap.Logger, err error) {
 	if cfg.ENV == "" || cfg.ENV == "development" {
 		return zap.NewDevelopment()
 	} else {
-		return zap.NewProduction(zap.Fields(
-			zap.String("env", cfg.ENV),
-		))
+		return zap.NewProduction()
 	}
 }
 

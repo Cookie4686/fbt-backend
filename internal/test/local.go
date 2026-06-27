@@ -5,19 +5,16 @@ import (
 	"fbt/backend/internal/server"
 	"fbt/backend/internal/util"
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
-func NewTestLocalAPI(t *testing.T) (context.Context, *grpc.ClientConn) {
-	ctx := t.Context()
+func NewTestLocalAPI(t *testing.T) (ctx context.Context, baseURL string) {
+	ctx = t.Context()
 
 	ChangeDirectory(t)
 
@@ -26,26 +23,11 @@ func NewTestLocalAPI(t *testing.T) (context.Context, *grpc.ClientConn) {
 
 	ClearDatabase(t, ctx, d.DB)
 
-	s := server.NewServer(d)
+	svr := server.NewServer(d)
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", d.CFG.API.PORT))
-	require.NoError(t, err)
+	go func() { server.StartListening(svr, d) }()
 
-	go func() {
-		err := s.Serve(lis)
-		require.NoError(t, err)
-		t.Cleanup((func() {
-			s.Stop()
-		}))
-	}()
-
-	conn, err := grpc.NewClient(lis.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	t.Cleanup(func() {
-		conn.Close()
-	})
-	require.NoError(t, err)
-
-	return ctx, conn
+	return ctx, fmt.Sprintf("http://localhost:%d", d.CFG.API.PORT)
 }
 
 func ClearDatabase(t *testing.T, ctx context.Context, db *pgxpool.Pool) {

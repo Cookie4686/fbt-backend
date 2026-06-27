@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package bookkeeping.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+message Account {
+  int32 id = 1 [(buf.validate.field).required = true];
+  string name = 2 [(buf.validate.field).required = true];
+  bool is_debit = 3;
+  string user_id = 4 [(buf.validate.field).required = true];
+}
+
+message TransactionEntry {
+  int64 id = 1 [(buf.validate.field).required = true];
+  google.protobuf.Timestamp time = 2 [(buf.validate.field).required = true];
+  repeated Entry entries = 3 [(buf.validate.field).required = true];
+}
+
+message Entry {
+  int32 account_id = 1 [(buf.validate.field).required = true];
+  float amount = 2 [(buf.validate.field).required = true];
+}

@@ -1,34 +1,35 @@
 package transaction_test
 
 import (
+	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
+	"fbt/backend/gen/proto/go/bookkeeping/v1/bookkeepingv1connect"
 	"fbt/backend/internal/domain/bookkeeping/model"
+	"fbt/backend/internal/interceptor"
 	"fbt/backend/internal/test"
+	"net/http"
 	"testing"
 
-	accountPB "fbt/backend/internal/domain/bookkeeping/features/account/pb"
-	"fbt/backend/internal/domain/bookkeeping/features/transaction/pb"
-
+	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestTransaction(t *testing.T) {
-	ctx, conn := test.NewTestLocalAPI(t)
+	ctx, baseURL := test.NewTestLocalAPI(t)
 
-	accClient := accountPB.NewAccountServiceClient(conn)
-	client := pb.NewTransactionClient(conn)
+	accClient := bookkeepingv1connect.NewAccountServiceClient(http.DefaultClient, baseURL, connect.WithGRPC())
+	client := bookkeepingv1connect.NewTransactionServiceClient(http.DefaultClient, baseURL, connect.WithGRPC())
 
-	session := test.SetupUser(t, ctx, conn)
+	session := test.SetupUser(t, ctx, baseURL)
 
 	cash := model.Account{Name: "Cash", IsDebit: true}
 	loan := model.Account{Name: "Loan", IsDebit: false}
 
 	for _, a := range []*model.Account{&cash, &loan} {
-		ctx = metadata.AppendToOutgoingContext(ctx, "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		res, err := accClient.Create(ctx, &accountPB.CreateRequest{
+		res, err := accClient.Create(ctx, &bookkeepingv1.AccountServiceCreateRequest{
 			Name:    a.Name,
 			IsDebit: a.IsDebit,
 		})
@@ -38,22 +39,22 @@ func TestTransaction(t *testing.T) {
 	}
 
 	t.Run("GetAll (empty)", func(t *testing.T) {
-		ctx = metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		res, err := client.GetAll(ctx, &pb.GetAllRequest{})
+		res, err := client.GetAll(ctx, &bookkeepingv1.TransactionServiceGetAllRequest{})
 		require.NoError(t, err)
 
 		assert.Len(t, res.TransactionEntry, 0)
 	})
 
 	t.Run("Create", func(t *testing.T) {
-		ctx = metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		res, err := client.Create(ctx, &pb.CreateRequest{
+		res, err := client.Create(ctx, &bookkeepingv1.TransactionServiceCreateRequest{
 			Time: timestamppb.Now(),
-			Entries: []*pb.Entry{
-				{AccountID: cash.ID, Amount: 100},
-				{AccountID: loan.ID, Amount: 100},
+			Entries: []*bookkeepingv1.Entry{
+				{AccountId: cash.ID, Amount: 100},
+				{AccountId: loan.ID, Amount: 100},
 			},
 		})
 		require.NoError(t, err)
@@ -62,9 +63,9 @@ func TestTransaction(t *testing.T) {
 	})
 
 	t.Run("GetAll", func(t *testing.T) {
-		ctx = metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		res, err := client.GetAll(ctx, &pb.GetAllRequest{})
+		res, err := client.GetAll(ctx, &bookkeepingv1.TransactionServiceGetAllRequest{})
 		require.NoError(t, err)
 
 		assert.Len(t, res.TransactionEntry, 1)

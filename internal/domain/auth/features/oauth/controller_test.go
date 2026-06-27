@@ -1,25 +1,27 @@
 package oauth_test
 
 import (
-	"fbt/backend/internal/domain/auth/common"
-	"fbt/backend/internal/domain/auth/features/oauth/pb"
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
+	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
+	"fbt/backend/internal/interceptor"
 	"fbt/backend/internal/test"
+	"net/http"
 	"testing"
 
+	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/metadata"
 )
 
 func TestOAuth(t *testing.T) {
-	_, conn := test.NewTestLocalAPI(t)
+	_, baseURL := test.NewTestLocalAPI(t)
 
-	client := pb.NewOAuthClient(conn)
+	client := authv1connect.NewOAuthServiceClient(http.DefaultClient, baseURL, connect.WithGRPC())
 
 	var registrationID string
 
 	t.Run("Login", func(t *testing.T) {
-		res, err := client.Login(t.Context(), &pb.LoginRequest{
+		res, err := client.Login(t.Context(), &authv1.OAuthServiceLoginRequest{
 			Token:    "token",
 			Email:    "test@email.com",
 			Provider: "google",
@@ -28,19 +30,19 @@ func TestOAuth(t *testing.T) {
 
 		require.Equal(t, true, res.RegistrationNeeded)
 
-		registrationID = res.RegistrationID
+		registrationID = res.RegistrationId
 	})
 
-	var session *common.Session
+	var session *authv1.Session
 	t.Run("Register", func(t *testing.T) {
-		res, err := client.Register(t.Context(), &pb.RegisterRequest{
+		res, err := client.Register(t.Context(), &authv1.OAuthServiceRegisterRequest{
 			Username:        "test",
 			Email:           "test@email.com",
 			Password:        "12345678",
 			PasswordEnabled: true,
 
-			RegistrationID: registrationID,
-			TokenID:        "token",
+			RegistrationId: registrationID,
+			TokenId:        "token",
 			Provider:       "google",
 		})
 		require.NoError(t, err)
@@ -51,9 +53,9 @@ func TestOAuth(t *testing.T) {
 	})
 
 	t.Run("Status", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		res, err := client.Status(ctx, &pb.StatusRequest{})
+		res, err := client.Status(ctx, &authv1.OAuthServiceStatusRequest{})
 		require.NoError(t, err)
 
 		assert.Len(t, res.Providers, 1)

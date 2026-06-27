@@ -2,30 +2,26 @@ package account
 
 import (
 	"context"
-	"fbt/backend/internal/domain/bookkeeping/features/account/pb"
+	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
+	"fbt/backend/gen/proto/go/bookkeeping/v1/bookkeepingv1connect"
 	"fbt/backend/internal/domain/bookkeeping/model"
 	"fbt/backend/internal/domain/bookkeeping/service"
 	"fbt/backend/internal/interceptor"
+	"net/http"
 
-	"google.golang.org/grpc"
+	"connectrpc.com/connect"
 )
 
 type Server struct {
 	service service.Service
 	repo    Repo
-
-	pb.UnimplementedAccountServiceServer
 }
 
-func NewServer(service service.Service, repo Repo) *Server {
-	return &Server{service, repo, pb.UnimplementedAccountServiceServer{}}
+func NewServiceHandler(service service.Service, repo Repo, opts ...connect.HandlerOption) (string, http.Handler) {
+	return bookkeepingv1connect.NewAccountServiceHandler(&Server{service, repo}, opts...)
 }
 
-func RegisterService(service service.Service, repo Repo, s *grpc.Server) {
-	pb.RegisterAccountServiceServer(s, NewServer(service, repo))
-}
-
-func (c *Server) GetAll(ctx context.Context, in *pb.GetAllRequest) (*pb.GetAllReply, error) {
+func (c *Server) GetAll(ctx context.Context, in *bookkeepingv1.AccountServiceGetAllRequest) (*bookkeepingv1.AccountServiceGetAllResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -39,15 +35,15 @@ func (c *Server) GetAll(ctx context.Context, in *pb.GetAllRequest) (*pb.GetAllRe
 		return nil, err
 	}
 
-	accounts := make([]*pb.Account, len(*accs))
+	accounts := make([]*bookkeepingv1.Account, len(*accs))
 	for idx, a := range *accs {
-		accounts[idx] = toCommonAccount(&a)
+		accounts[idx] = a.ToProto()
 	}
 
-	return &pb.GetAllReply{Account: accounts}, nil
+	return &bookkeepingv1.AccountServiceGetAllResponse{Account: accounts}, nil
 }
 
-func (c *Server) Create(ctx context.Context, in *pb.CreateRequest) (*pb.CreateReply, error) {
+func (c *Server) Create(ctx context.Context, in *bookkeepingv1.AccountServiceCreateRequest) (*bookkeepingv1.AccountServiceCreateResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -68,10 +64,10 @@ func (c *Server) Create(ctx context.Context, in *pb.CreateRequest) (*pb.CreateRe
 	}
 
 	account.ID = accountID
-	return &pb.CreateReply{Account: toCommonAccount(account)}, nil
+	return &bookkeepingv1.AccountServiceCreateResponse{Account: account.ToProto()}, nil
 }
 
-func (c *Server) Update(ctx context.Context, in *pb.UpdateRequest) (*pb.UpdateReply, error) {
+func (c *Server) Update(ctx context.Context, in *bookkeepingv1.AccountServiceUpdateRequest) (*bookkeepingv1.AccountServiceUpdateResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -92,10 +88,10 @@ func (c *Server) Update(ctx context.Context, in *pb.UpdateRequest) (*pb.UpdateRe
 		return nil, err
 	}
 
-	return &pb.UpdateReply{Account: toCommonAccount(account)}, nil
+	return &bookkeepingv1.AccountServiceUpdateResponse{Account: account.ToProto()}, nil
 }
 
-func (c *Server) Delete(ctx context.Context, in *pb.DeleteRequest) (*pb.DeleteReply, error) {
+func (c *Server) Delete(ctx context.Context, in *bookkeepingv1.AccountServiceDeleteRequest) (*bookkeepingv1.AccountServiceDeleteResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -109,14 +105,5 @@ func (c *Server) Delete(ctx context.Context, in *pb.DeleteRequest) (*pb.DeleteRe
 		return nil, err
 	}
 
-	return &pb.DeleteReply{}, nil
-}
-
-func toCommonAccount(account *model.Account) *pb.Account {
-	return &pb.Account{
-		Id:      account.ID,
-		Name:    account.Name,
-		IsDebit: account.IsDebit,
-		UserID:  account.UserId,
-	}
+	return &bookkeepingv1.AccountServiceDeleteResponse{}, nil
 }

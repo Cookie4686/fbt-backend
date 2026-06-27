@@ -1,31 +1,52 @@
 package model
 
 import (
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const SessionExpiresIn = 24 * time.Hour
 
 type User struct {
-	Id              string      `json:"id" db:"user_id"`
-	Username        string      `json:"username" db:"username"`
-	Email           string      `json:"email" db:"email"`
-	EmailVerified   bool        `json:"emailVerified" db:"email_verified"`
-	Password        pgtype.Text `json:"-" db:"password"`
-	PasswordSalt    pgtype.Text `json:"-" db:"password_salt"`
-	PasswordEnabled bool        `json:"password_enabled" db:"password_enabled"`
+	Id              string      `db:"user_id"`
+	Username        string      `db:"username"`
+	Email           string      `db:"email"`
+	EmailVerified   bool        `db:"email_verified"`
+	Password        pgtype.Text `db:"password"`
+	PasswordSalt    pgtype.Text `db:"password_salt"`
+	PasswordEnabled bool        `db:"password_enabled"`
+}
+
+func (u *User) ToProto() *authv1.User {
+	return &authv1.User{
+		Id:              u.Id,
+		Username:        u.Username,
+		Email:           u.Email,
+		EmailVerified:   u.EmailVerified,
+		PasswordEnabled: u.PasswordEnabled,
+	}
 }
 
 type Session struct {
-	Id                string    `json:"id" db:"session_id"`
-	UserId            string    `json:"userId" db:"user_id"`
-	ExpiresAt         time.Time `json:"expiresAt" db:"expires_at"`
-	TwoFactorVerified bool      `json:"twoFactorVerified" db:"two_factor_verified"`
+	Id                string    `db:"session_id"`
+	UserId            string    `db:"user_id"`
+	ExpiresAt         time.Time `db:"expires_at"`
+	TwoFactorVerified bool      `db:"two_factor_verified"`
+}
+
+func (s *Session) ToProto() *authv1.Session {
+	return &authv1.Session{
+		Id:                s.Id,
+		UserId:            s.UserId,
+		TwoFactorVerified: s.TwoFactorVerified,
+		ExpiresAt:         timestamppb.New(s.ExpiresAt),
+	}
 }
 
 type Auth struct {
-	Session Session `json:"session"`
-	User    User    `json:"user"`
+	Session Session
+	User    User
 }

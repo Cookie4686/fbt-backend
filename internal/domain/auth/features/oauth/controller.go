@@ -4,51 +4,45 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"fbt/backend/internal/domain/auth/common"
-	"fbt/backend/internal/domain/auth/features/oauth/pb"
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
+	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/util"
+	"net/http"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/crypto/argon2"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Server struct {
 	service service.Service
 	repo    Repo
-
-	pb.UnimplementedOAuthServer
 }
 
-func NewServer(service service.Service, repo Repo) *Server {
-	return &Server{service, repo, pb.UnimplementedOAuthServer{}}
+func NewServiceHandler(service service.Service, repo Repo, opts ...connect.HandlerOption) (string, http.Handler) {
+	return authv1connect.NewOAuthServiceHandler(&Server{service, repo}, opts...)
 }
 
-func RegisterService(service service.Service, repo Repo, s *grpc.Server) {
-	pb.RegisterOAuthServer(s, NewServer(service, repo))
-}
-
-func (s *Server) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterReply, error) {
-	oauthRegistration, err := s.repo.GetOAuthRegistration(ctx, in.RegistrationID)
+func (s *Server) Register(ctx context.Context, in *authv1.OAuthServiceRegisterRequest) (*authv1.OAuthServiceRegisterResponse, error) {
+	oauthRegistration, err := s.repo.GetOAuthRegistration(ctx, in.RegistrationId)
 	if err != nil {
 		return nil, err
 	}
 
 	if time.Now().After(oauthRegistration.ExpiresAt) {
-		if err := s.repo.DeleteOAuthRegistration(ctx, in.Provider, in.TokenID); err != nil {
+		if err := s.repo.DeleteOAuthRegistration(ctx, in.Provider, in.TokenId); err != nil {
 			return nil, err
 		} else {
 			return nil, errors.RegistrationSessionExpire
 		}
 	}
 
-	if (oauthRegistration.RegistrationID != in.RegistrationID) ||
-		(oauthRegistration.IDToken != in.TokenID) {
+	if (oauthRegistration.RegistrationID != in.RegistrationId) ||
+		(oauthRegistration.IDToken != in.TokenId) {
 		return nil, errors.BadRequest
 	}
 
@@ -75,21 +69,15 @@ func (s *Server) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.Regi
 		ExpiresAt:         time.Now().Add(model.SessionExpiresIn),
 		TwoFactorVerified: false,
 	}
-	err = s.repo.OAuthRegister(ctx, in.RegistrationID, user, session)
+	err = s.repo.OAuthRegister(ctx, in.RegistrationId, user, session)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.RegisterReply{
-		Session: &common.Session{
-			Id:                session.Id,
-			UserID:            session.UserId,
-			TwoFactorVerified: session.TwoFactorVerified,
-			ExpiresAt:         timestamppb.New(session.ExpiresAt),
-		}}, nil
+	return &authv1.OAuthServiceRegisterResponse{Session: session.ToProto()}, nil
 }
 
-func (s *Server) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginReply, error) {
+func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest) (*authv1.OAuthServiceLoginResponse, error) {
 	userOAuth, err := s.repo.GetUserOAuth(ctx, in.Provider, in.Token)
 	if err != nil && err != errors.NotFound {
 		return nil, err
@@ -118,14 +106,9 @@ func (s *Server) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginReply
 		if err != nil {
 			return nil, err
 		}
-		return &pb.LoginReply{
+		return &authv1.OAuthServiceLoginResponse{
 			RegistrationNeeded: false,
-			Session: &common.Session{
-				Id:                session.Id,
-				UserID:            session.UserId,
-				TwoFactorVerified: session.TwoFactorVerified,
-				ExpiresAt:         timestamppb.New(session.ExpiresAt),
-			},
+			Session:            session.ToProto(),
 		}, nil
 	} else {
 		// No OAuth and No Email Registration
@@ -139,14 +122,14 @@ func (s *Server) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginReply
 		if err != nil {
 			return nil, err
 		}
-		return &pb.LoginReply{
+		return &authv1.OAuthServiceLoginResponse{
 			RegistrationNeeded: true,
-			RegistrationID:     oauthRegistration.RegistrationID,
+			RegistrationId:     oauthRegistration.RegistrationID,
 		}, nil
 	}
 }
 
-func (s *Server) Status(ctx context.Context, in *pb.StatusRequest) (*pb.StatusReply, error) {
+func (s *Server) Status(ctx context.Context, in *authv1.OAuthServiceStatusRequest) (*authv1.OAuthServiceStatusResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -157,5 +140,5 @@ func (s *Server) Status(ctx context.Context, in *pb.StatusRequest) (*pb.StatusRe
 		return nil, err
 	}
 
-	return &pb.StatusReply{Providers: providers}, nil
+	return &authv1.OAuthServiceStatusResponse{Providers: providers}, nil
 }

@@ -1,28 +1,31 @@
 package mfa_test
 
 import (
-	"fbt/backend/internal/domain/auth/features/mfa/pb"
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
+	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
+	"fbt/backend/internal/interceptor"
 	"fbt/backend/internal/test"
+	"net/http"
 	"testing"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/metadata"
 )
 
 func TestMFA(t *testing.T) {
-	ctx, conn := test.NewTestLocalAPI(t)
+	ctx, baseURL := test.NewTestLocalAPI(t)
 
-	session := test.SetupUser(t, ctx, conn)
+	client := authv1connect.NewMFAServiceClient(http.DefaultClient, baseURL, connect.WithGRPC())
 
-	client := pb.NewMFAClient(conn)
+	session := test.SetupUser(t, ctx, baseURL)
 
 	t.Run("Status", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		res, err := client.Status(ctx, &pb.StatusRequest{})
+		res, err := client.Status(ctx, &authv1.MFAServiceStatusRequest{})
 		require.NoError(t, err)
 
 		assert.Equal(t, false, res.TotpEnabled)
@@ -32,9 +35,9 @@ func TestMFA(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("TOTP Upsert", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		res, err := client.TOTPUpsertKey(ctx, &pb.TOTPUpsertRequest{
+		res, err := client.TOTPUpsertKey(ctx, &authv1.MFAServiceTOTPUpsertKeyRequest{
 			Key: key.Secret(),
 		})
 		require.NoError(t, err)
@@ -45,12 +48,12 @@ func TestMFA(t *testing.T) {
 	})
 
 	t.Run("TOTP Validate", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
 		code, err := totp.GenerateCode(key.Secret(), time.Now())
 		require.NoError(t, err)
 
-		res, err := client.TOTPValidate(ctx, &pb.TOTPValidateRequest{
+		res, err := client.TOTPValidate(ctx, &authv1.MFAServiceTOTPValidateRequest{
 			Code: code,
 		})
 		require.NoError(t, err)
@@ -59,9 +62,9 @@ func TestMFA(t *testing.T) {
 	})
 
 	t.Run("Status", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		res, err := client.Status(ctx, &pb.StatusRequest{})
+		res, err := client.Status(ctx, &authv1.MFAServiceStatusRequest{})
 		require.NoError(t, err)
 
 		assert.Equal(t, true, res.TotpEnabled)

@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "auth/v1/common.proto";
+import "buf/validate/validate.proto";
+
+service SessionService {
+  rpc Logout(SessionServiceLogoutRequest) returns (SessionServiceLogoutResponse) {}
+  rpc Validate(SessionServiceValidateRequest) returns (SessionServiceValidateResponse) {}
+}
+
+message SessionServiceLogoutRequest {}
+message SessionServiceLogoutResponse {}
+
+message SessionServiceValidateRequest {}
+message SessionServiceValidateResponse {
+  Session session = 1 [(buf.validate.field).required = true];
+  User user = 2 [(buf.validate.field).required = true];
+}

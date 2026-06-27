@@ -1,43 +1,46 @@
 package session_test
 
 import (
-	"fbt/backend/internal/domain/auth/features/session/pb"
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
+	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
+	"fbt/backend/internal/interceptor"
 	"fbt/backend/internal/test"
+	"net/http"
 	"testing"
 
+	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/metadata"
 )
 
 func TestSession(t *testing.T) {
-	ctx, conn := test.NewTestLocalAPI(t)
+	ctx, baseURL := test.NewTestLocalAPI(t)
 
-	session := test.SetupUser(t, ctx, conn)
+	client := authv1connect.NewSessionServiceClient(http.DefaultClient, baseURL, connect.WithGRPC())
 
-	client := pb.NewSessionClient(conn)
+	session := test.SetupUser(t, ctx, baseURL)
 
 	t.Run("Validate", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		res, err := client.Validate(ctx, &pb.ValidateRequest{})
+		res, err := client.Validate(ctx, &authv1.SessionServiceValidateRequest{})
 		require.NoError(t, err)
 
 		assert.Equal(t, session.Id, res.Session.Id)
-		assert.Equal(t, session.UserID, res.User.Id)
+		assert.Equal(t, session.UserId, res.User.Id)
 	})
 
 	t.Run("Logout", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		_, err := client.Logout(ctx, &pb.LogoutRequest{})
+		_, err := client.Logout(ctx, &authv1.SessionServiceLogoutRequest{})
 		require.NoError(t, err)
 	})
 
 	t.Run("Validate", func(t *testing.T) {
-		ctx := metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		_, err := client.Validate(ctx, &pb.ValidateRequest{})
+		_, err := client.Validate(ctx, &authv1.SessionServiceValidateRequest{})
 		require.Error(t, err)
 	})
 }

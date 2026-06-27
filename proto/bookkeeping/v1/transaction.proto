@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package bookkeeping.v1;
+
+import "bookkeeping/v1/common.proto";
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+service TransactionService {
+  rpc GetAll(TransactionServiceGetAllRequest) returns (TransactionServiceGetAllResponse) {}
+  rpc Create(TransactionServiceCreateRequest) returns (TransactionServiceCreateResponse) {}
+  rpc Update(TransactionServiceUpdateRequest) returns (TransactionServiceUpdateResponse) {}
+  rpc Delete(TransactionServiceDeleteRequest) returns (TransactionServiceDeleteResponse) {}
+}
+
+message TransactionServiceGetAllRequest {}
+message TransactionServiceGetAllResponse {
+  repeated TransactionEntry transaction_entry = 1 [(buf.validate.field).required = true];
+}
+
+message TransactionServiceCreateRequest {
+  google.protobuf.Timestamp time = 1 [(buf.validate.field).required = true];
+  repeated Entry entries = 2 [(buf.validate.field).required = true];
+}
+message TransactionServiceCreateResponse {
+  TransactionEntry transaction_entry = 1 [(buf.validate.field).required = true];
+}
+
+message TransactionServiceUpdateRequest {
+  TransactionEntry transaction_entry = 1 [(buf.validate.field).required = true];
+}
+message TransactionServiceUpdateResponse {
+  TransactionEntry transaction_entry = 1 [(buf.validate.field).required = true];
+}
+
+message TransactionServiceDeleteRequest {
+  int64 id = 1 [(buf.validate.field).required = true];
+}
+message TransactionServiceDeleteResponse {}

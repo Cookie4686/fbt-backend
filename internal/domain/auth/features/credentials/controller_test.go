@@ -1,17 +1,20 @@
 package credentials_test
 
 import (
-	"fbt/backend/internal/domain/auth/features/credentials/pb"
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
+	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
 	"fbt/backend/internal/test"
+	"net/http"
 	"testing"
 
+	"connectrpc.com/connect"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCredentials(t *testing.T) {
-	ctx, conn := test.NewTestLocalAPI(t)
+	ctx, baseURL := test.NewTestLocalAPI(t)
 
-	client := pb.NewCredentialsClient(conn)
+	client := authv1connect.NewCredentialServiceClient(http.DefaultClient, baseURL, connect.WithGRPC())
 
 	username := "test"
 	password := "12345678"
@@ -19,7 +22,7 @@ func TestCredentials(t *testing.T) {
 	t.Run("Register", func(t *testing.T) {
 		ctx := t.Context()
 
-		res, err := client.Register(ctx, &pb.RegisterRequest{
+		res, err := client.Register(ctx, &authv1.CredentialServiceRegisterRequest{
 			Username: username,
 			Email:    "test@email.com",
 			Password: password,
@@ -30,7 +33,7 @@ func TestCredentials(t *testing.T) {
 	})
 
 	t.Run("Login", func(t *testing.T) {
-		res, err := client.Login(ctx, &pb.LoginRequest{
+		res, err := client.Login(ctx, &authv1.CredentialServiceLoginRequest{
 			Username: username,
 			Password: password,
 		})

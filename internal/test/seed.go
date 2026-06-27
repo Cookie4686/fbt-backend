@@ -2,18 +2,19 @@ package test
 
 import (
 	"context"
-	"fbt/backend/internal/domain/auth/common"
-	"fbt/backend/internal/domain/auth/features/credentials/pb"
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
+	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
+	"net/http"
 	"testing"
 
+	"connectrpc.com/connect"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc"
 )
 
-func SetupUser(t *testing.T, ctx context.Context, conn *grpc.ClientConn) *common.Session {
-	client := pb.NewCredentialsClient(conn)
+func SetupUser(t *testing.T, ctx context.Context, baseURL string) *authv1.Session {
+	client := authv1connect.NewCredentialServiceClient(http.DefaultClient, baseURL, connect.WithGRPC())
 
-	res, err := client.Register(ctx, &pb.RegisterRequest{
+	res, err := client.Register(ctx, &authv1.CredentialServiceRegisterRequest{
 		Username: "test",
 		Email:    "test@email.com",
 		Password: "12345678",

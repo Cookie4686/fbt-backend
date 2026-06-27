@@ -1,44 +1,47 @@
 package account_test
 
 import (
-	"fbt/backend/internal/domain/bookkeeping/features/account/pb"
+	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
+	"fbt/backend/gen/proto/go/bookkeeping/v1/bookkeepingv1connect"
 	"fbt/backend/internal/domain/bookkeeping/model"
+	"fbt/backend/internal/interceptor"
 	"fbt/backend/internal/test"
+	"net/http"
 	"slices"
 	"testing"
 
+	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/metadata"
 )
 
 func TestAccount(t *testing.T) {
-	ctx, conn := test.NewTestLocalAPI(t)
+	ctx, baseURL := test.NewTestLocalAPI(t)
 
-	client := pb.NewAccountServiceClient(conn)
+	client := bookkeepingv1connect.NewAccountServiceClient(http.DefaultClient, baseURL, connect.WithGRPC())
 
-	session := test.SetupUser(t, ctx, conn)
+	session := test.SetupUser(t, ctx, baseURL)
 
 	accounts := []model.Account{
-		{Name: "Cash", IsDebit: true, UserId: session.UserID},
-		{Name: "Bank-1", IsDebit: true, UserId: session.UserID},
-		{Name: "Loan-1", IsDebit: false, UserId: session.UserID},
+		{Name: "Cash", IsDebit: true, UserId: session.UserId},
+		{Name: "Bank-1", IsDebit: true, UserId: session.UserId},
+		{Name: "Loan-1", IsDebit: false, UserId: session.UserId},
 	}
 
 	t.Run("Get All (Empty)", func(t *testing.T) {
-		ctx = metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		res, err := client.GetAll(ctx, &pb.GetAllRequest{})
+		res, err := client.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
 		require.NoError(t, err)
 
 		assert.Len(t, res.Account, 0)
 	})
 
 	t.Run("Create", func(t *testing.T) {
-		ctx = metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
 		for idx, a := range accounts {
-			res, err := client.Create(ctx, &pb.CreateRequest{
+			res, err := client.Create(ctx, &bookkeepingv1.AccountServiceCreateRequest{
 				Name:    a.Name,
 				IsDebit: a.IsDebit,
 			})
@@ -49,12 +52,12 @@ func TestAccount(t *testing.T) {
 	})
 
 	t.Run("Get All", func(t *testing.T) {
-		ctx = metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		res, err := client.GetAll(ctx, &pb.GetAllRequest{})
+		res, err := client.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
 		require.NoError(t, err)
 
-		assert.ElementsMatch(t, accounts, commonToAccount(res.Account))
+		assert.ElementsMatch(t, accounts, protoToModel(res.Account))
 	})
 
 	updated := &accounts[slices.IndexFunc(accounts, func(a model.Account) bool {
@@ -64,31 +67,31 @@ func TestAccount(t *testing.T) {
 	updated.IsDebit = false
 
 	t.Run("Update", func(t *testing.T) {
-		ctx = metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		_, err := client.Update(ctx, &pb.UpdateRequest{
+		_, err := client.Update(ctx, &bookkeepingv1.AccountServiceUpdateRequest{
 			Id:      updated.ID,
 			Name:    updated.Name,
 			IsDebit: updated.IsDebit,
 		})
 		require.NoError(t, err)
 
-		res, err := client.GetAll(ctx, &pb.GetAllRequest{})
+		res, err := client.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
 		require.NoError(t, err)
 
-		updatedInDB := (res.Account)[slices.IndexFunc(res.Account, func(a *pb.Account) bool {
+		updatedInDB := (res.Account)[slices.IndexFunc(res.Account, func(a *bookkeepingv1.Account) bool {
 			return a.Id == updated.ID
 		})]
 
 		assert.Equal(t, updated.Name, updatedInDB.Name, "Account Name should be changed")
 		assert.Equal(t, updated.IsDebit, updatedInDB.IsDebit, "Account Is Debit should be changed")
-		assert.ElementsMatch(t, accounts, commonToAccount(res.Account))
+		assert.ElementsMatch(t, accounts, protoToModel(res.Account))
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		ctx = metadata.AppendToOutgoingContext(t.Context(), "session_id", session.Id)
+		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
 
-		_, err := client.Delete(ctx, &pb.DeleteRequest{
+		_, err := client.Delete(ctx, &bookkeepingv1.AccountServiceDeleteRequest{
 			Id: updated.ID,
 		})
 		require.NoError(t, err)
@@ -97,21 +100,21 @@ func TestAccount(t *testing.T) {
 			return a.ID == updated.ID
 		})
 
-		res, err := client.GetAll(ctx, &pb.GetAllRequest{})
+		res, err := client.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
 		require.NoError(t, err)
 
-		assert.ElementsMatch(t, accounts, commonToAccount(res.Account))
+		assert.ElementsMatch(t, accounts, protoToModel(res.Account))
 	})
 }
 
-func commonToAccount(accs []*pb.Account) []model.Account {
+func protoToModel(accs []*bookkeepingv1.Account) []model.Account {
 	accounts := make([]model.Account, len(accs))
 	for idx, a := range accs {
 		accounts[idx] = model.Account{
 			ID:      a.Id,
 			Name:    a.Name,
 			IsDebit: a.IsDebit,
-			UserId:  a.UserID,
+			UserId:  a.UserId,
 		}
 	}
 	return accounts

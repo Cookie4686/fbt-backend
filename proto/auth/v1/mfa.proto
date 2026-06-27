@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "auth/v1/common.proto";
+import "buf/validate/validate.proto";
+
+service MFAService {
+  rpc Status(MFAServiceStatusRequest) returns (MFAServiceStatusResponse) {}
+  rpc TOTPValidate(MFAServiceTOTPValidateRequest) returns (MFAServiceTOTPValidateResponse) {}
+  rpc TOTPUpsertKey(MFAServiceTOTPUpsertKeyRequest) returns (MFAServiceTOTPUpsertKeyResponse) {}
+}
+
+message MFAServiceStatusRequest {}
+message MFAServiceStatusResponse {
+  bool totp_enabled = 1;
+}
+
+message MFAServiceTOTPValidateRequest {
+  string code = 1 [(buf.validate.field).required = true];
+}
+message MFAServiceTOTPValidateResponse {
+  bool is_valid = 1;
+}
+
+message MFAServiceTOTPUpsertKeyRequest {
+  string key = 1 [(buf.validate.field).required = true];
+}
+message MFAServiceTOTPUpsertKeyResponse {
+  Session session = 1 [(buf.validate.field).required = true];
+}
