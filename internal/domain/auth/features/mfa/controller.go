@@ -4,8 +4,9 @@ import (
 	"context"
 	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
-	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
+	"fbt/backend/internal/errors"
+	"fbt/backend/internal/interceptor"
 	"net/http"
 
 	"connectrpc.com/connect"
@@ -25,7 +26,10 @@ func (s *Server) Status(ctx context.Context, in *authv1.MFAServiceStatusRequest)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth := ctx.Value("auth").(*model.Auth)
+	auth, err := interceptor.FromAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	userMfaList, err := s.repo.GetMFAList(ctx, auth.User.Id)
 	if err != nil {
@@ -38,7 +42,10 @@ func (s *Server) TOTPValidate(ctx context.Context, in *authv1.MFAServiceTOTPVali
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth := ctx.Value("auth").(*model.Auth)
+	auth, err := interceptor.FromAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	userTotp, err := s.repo.GetTOTP(ctx, auth.User.Id)
 	if err != nil {
@@ -50,10 +57,17 @@ func (s *Server) TOTPValidate(ctx context.Context, in *authv1.MFAServiceTOTPVali
 		return nil, err
 	}
 
-	isValid := totp.Validate(in.Code, *secret)
+	if !totp.Validate(in.Code, *secret) {
+		return nil, errors.BadRequest
+	}
+
+	session, err := s.service.CreateSession(ctx, auth.User.Id, true)
+	if err != nil {
+		return nil, err
+	}
 
 	return &authv1.MFAServiceTOTPValidateResponse{
-		IsValid: isValid,
+		Session: session.ToProto(),
 	}, nil
 }
 
@@ -61,7 +75,10 @@ func (s *Server) TOTPUpsertKey(ctx context.Context, in *authv1.MFAServiceTOTPUps
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth := ctx.Value("auth").(*model.Auth)
+	auth, err := interceptor.FromAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	encryptedKey, err := s.service.Encrypt(in.Key)
 	if err != nil {

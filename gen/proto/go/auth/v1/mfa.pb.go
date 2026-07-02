@@ -148,7 +148,7 @@ func (x *MFAServiceTOTPValidateRequest) GetCode() string {
 
 type MFAServiceTOTPValidateResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	IsValid       bool                   `protobuf:"varint,1,opt,name=is_valid,json=isValid,proto3" json:"is_valid,omitempty"`
+	Session       *Session               `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -183,11 +183,11 @@ func (*MFAServiceTOTPValidateResponse) Descriptor() ([]byte, []int) {
 	return file_auth_v1_mfa_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *MFAServiceTOTPValidateResponse) GetIsValid() bool {
+func (x *MFAServiceTOTPValidateResponse) GetSession() *Session {
 	if x != nil {
-		return x.IsValid
+		return x.Session
 	}
-	return false
+	return nil
 }
 
 type MFAServiceTOTPUpsertKeyRequest struct {
@@ -287,9 +287,9 @@ const file_auth_v1_mfa_proto_rawDesc = "" +
 	"\x18MFAServiceStatusResponse\x12!\n" +
 	"\ftotp_enabled\x18\x01 \x01(\bR\vtotpEnabled\";\n" +
 	"\x1dMFAServiceTOTPValidateRequest\x12\x1a\n" +
-	"\x04code\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04code\";\n" +
-	"\x1eMFAServiceTOTPValidateResponse\x12\x19\n" +
-	"\bis_valid\x18\x01 \x01(\bR\aisValid\":\n" +
+	"\x04code\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04code\"T\n" +
+	"\x1eMFAServiceTOTPValidateResponse\x122\n" +
+	"\asession\x18\x01 \x01(\v2\x10.auth.v1.SessionB\x06\xbaH\x03\xc8\x01\x01R\asession\":\n" +
 	"\x1eMFAServiceTOTPUpsertKeyRequest\x12\x18\n" +
 	"\x03key\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03key\"U\n" +
 	"\x1fMFAServiceTOTPUpsertKeyResponse\x122\n" +
@@ -324,18 +324,19 @@ var file_auth_v1_mfa_proto_goTypes = []any{
 	(*Session)(nil),                         // 6: auth.v1.Session
 }
 var file_auth_v1_mfa_proto_depIdxs = []int32{
-	6, // 0: auth.v1.MFAServiceTOTPUpsertKeyResponse.session:type_name -> auth.v1.Session
-	0, // 1: auth.v1.MFAService.Status:input_type -> auth.v1.MFAServiceStatusRequest
-	2, // 2: auth.v1.MFAService.TOTPValidate:input_type -> auth.v1.MFAServiceTOTPValidateRequest
-	4, // 3: auth.v1.MFAService.TOTPUpsertKey:input_type -> auth.v1.MFAServiceTOTPUpsertKeyRequest
-	1, // 4: auth.v1.MFAService.Status:output_type -> auth.v1.MFAServiceStatusResponse
-	3, // 5: auth.v1.MFAService.TOTPValidate:output_type -> auth.v1.MFAServiceTOTPValidateResponse
-	5, // 6: auth.v1.MFAService.TOTPUpsertKey:output_type -> auth.v1.MFAServiceTOTPUpsertKeyResponse
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	6, // 0: auth.v1.MFAServiceTOTPValidateResponse.session:type_name -> auth.v1.Session
+	6, // 1: auth.v1.MFAServiceTOTPUpsertKeyResponse.session:type_name -> auth.v1.Session
+	0, // 2: auth.v1.MFAService.Status:input_type -> auth.v1.MFAServiceStatusRequest
+	2, // 3: auth.v1.MFAService.TOTPValidate:input_type -> auth.v1.MFAServiceTOTPValidateRequest
+	4, // 4: auth.v1.MFAService.TOTPUpsertKey:input_type -> auth.v1.MFAServiceTOTPUpsertKeyRequest
+	1, // 5: auth.v1.MFAService.Status:output_type -> auth.v1.MFAServiceStatusResponse
+	3, // 6: auth.v1.MFAService.TOTPValidate:output_type -> auth.v1.MFAServiceTOTPValidateResponse
+	5, // 7: auth.v1.MFAService.TOTPUpsertKey:output_type -> auth.v1.MFAServiceTOTPUpsertKeyResponse
+	5, // [5:8] is the sub-list for method output_type
+	2, // [2:5] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_auth_v1_mfa_proto_init() }

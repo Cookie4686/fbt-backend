@@ -17,6 +17,13 @@ type Config struct {
 		PGPASSWORD string `env:"PGPASSWORD" envDefault:""`
 	}
 	ENCRYPTION_KEY string `env:"ENCRYPTION_KEY" envDefault:""`
+	MAIL           struct {
+		ADDRESS  string `env:"MAIL_ADDRESS" envDefault:""`
+		SERVER   string `env:"MAIL_SERVER" envDefault:""`
+		PORT     int    `env:"MAIL_PORT" envDefault:"25"`
+		USERNAME string `env:"MAIL_USERNAME" envDefault:""`
+		PASSWORD string `env:"MAIL_PASSWORD" envDefault:""`
+	}
 }
 
 func NewConfig(path string) (*Config, error) {

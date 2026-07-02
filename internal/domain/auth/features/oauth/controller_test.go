@@ -20,11 +20,13 @@ func TestOAuth(t *testing.T) {
 
 	var registrationID string
 
+	email := "test@email.com"
+
 	t.Run("Login", func(t *testing.T) {
 		res, err := client.Login(t.Context(), &authv1.OAuthServiceLoginRequest{
 			Token:    "token",
-			Email:    "test@email.com",
 			Provider: "google",
+			Email:    &email,
 		})
 		require.NoError(t, err)
 

@@ -15,6 +15,8 @@ type Service interface {
 	GetUserByUsername(ctx context.Context, username string) (*model.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 
+	SendVerificationMail(email string, otp string) error
+
 	Decrypt(encryptedValue string) (*string, error)
 	Encrypt(value string) (*string, error)
 }

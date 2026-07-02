@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/wneessen/go-mail"
 	"go.uber.org/zap"
 )
 
@@ -12,6 +13,7 @@ type Dependency struct {
 	Logger *zap.Logger
 	CFG    *Config
 	DB     *pgxpool.Pool
+	Mail   *mail.Client
 }
 
 func NewDependency(ctx context.Context, envFilePath string) (*Dependency, error) {
@@ -21,8 +23,10 @@ func NewDependency(ctx context.Context, envFilePath string) (*Dependency, error)
 		return nil, err
 	} else if db, err := NewDatabasePool(ctx, cfg); err != nil {
 		return nil, err
+	} else if mail, err := NewMailClient(cfg); err != nil {
+		return nil, err
 	} else {
-		return &Dependency{Logger: logger, CFG: cfg, DB: db}, nil
+		return &Dependency{Logger: logger, CFG: cfg, DB: db, Mail: mail}, nil
 	}
 }
 
@@ -45,4 +49,18 @@ func NewDatabasePool(ctx context.Context, cfg *Config) (*pgxpool.Pool, error) {
 
 	conn, err := pgxpool.NewWithConfig(ctx, dbConfig)
 	return conn, err
+}
+
+func NewMailClient(cfg *Config) (*mail.Client, error) {
+	client, err := mail.NewClient(
+		cfg.MAIL.SERVER,
+		mail.WithPort(cfg.MAIL.PORT),
+		mail.WithSMTPAuth(mail.SMTPAuthPlain),
+		mail.WithUsername(cfg.MAIL.USERNAME),
+		mail.WithPassword(cfg.MAIL.PASSWORD),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return client, err
 }

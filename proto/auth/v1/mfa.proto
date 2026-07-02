@@ -20,7 +20,7 @@ message MFAServiceTOTPValidateRequest {
   string code = 1 [(buf.validate.field).required = true];
 }
 message MFAServiceTOTPValidateResponse {
-  bool is_valid = 1;
+  Session session = 1 [(buf.validate.field).required = true];
 }
 
 message MFAServiceTOTPUpsertKeyRequest {

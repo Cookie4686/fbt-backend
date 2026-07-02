@@ -68,6 +68,9 @@ func (s *interceptorProvider) Auth() connect.UnaryInterceptorFunc {
 			if IsPrivateMethod(req.Spec().Procedure) {
 				// authentication (token verification)
 				token, err := FromTokenContext(ctx)
+				if err != nil {
+					return nil, err
+				}
 
 				auth, err := s.service.Validate(ctx, token)
 				if err == errors.NotFound {

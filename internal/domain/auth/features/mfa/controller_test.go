@@ -58,7 +58,9 @@ func TestMFA(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		assert.Equal(t, true, res.IsValid)
+		assert.Equal(t, true, res.Session.TwoFactorVerified)
+
+		session = res.Session
 	})
 
 	t.Run("Status", func(t *testing.T) {

@@ -105,8 +105,9 @@ func (x *OAuthServiceStatusResponse) GetProviders() []string {
 type OAuthServiceLoginRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
-	Provider      string                 `protobuf:"bytes,3,opt,name=provider,proto3" json:"provider,omitempty"`
+	Provider      string                 `protobuf:"bytes,2,opt,name=provider,proto3" json:"provider,omitempty"`
+	EmailVerified bool                   `protobuf:"varint,3,opt,name=email_verified,json=emailVerified,proto3" json:"email_verified,omitempty"`
+	Email         *string                `protobuf:"bytes,4,opt,name=email,proto3,oneof" json:"email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -148,16 +149,23 @@ func (x *OAuthServiceLoginRequest) GetToken() string {
 	return ""
 }
 
-func (x *OAuthServiceLoginRequest) GetEmail() string {
+func (x *OAuthServiceLoginRequest) GetProvider() string {
 	if x != nil {
-		return x.Email
+		return x.Provider
 	}
 	return ""
 }
 
-func (x *OAuthServiceLoginRequest) GetProvider() string {
+func (x *OAuthServiceLoginRequest) GetEmailVerified() bool {
 	if x != nil {
-		return x.Provider
+		return x.EmailVerified
+	}
+	return false
+}
+
+func (x *OAuthServiceLoginRequest) GetEmail() string {
+	if x != nil && x.Email != nil {
+		return *x.Email
 	}
 	return ""
 }
@@ -358,6 +366,190 @@ func (x *OAuthServiceRegisterResponse) GetSession() *Session {
 	return nil
 }
 
+type OAuthServiceLinkRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Provider      string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OAuthServiceLinkRequest) Reset() {
+	*x = OAuthServiceLinkRequest{}
+	mi := &file_auth_v1_oauth_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OAuthServiceLinkRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OAuthServiceLinkRequest) ProtoMessage() {}
+
+func (x *OAuthServiceLinkRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_oauth_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OAuthServiceLinkRequest.ProtoReflect.Descriptor instead.
+func (*OAuthServiceLinkRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_oauth_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *OAuthServiceLinkRequest) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *OAuthServiceLinkRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+type OAuthServiceLinkResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Session       *Session               `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OAuthServiceLinkResponse) Reset() {
+	*x = OAuthServiceLinkResponse{}
+	mi := &file_auth_v1_oauth_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OAuthServiceLinkResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OAuthServiceLinkResponse) ProtoMessage() {}
+
+func (x *OAuthServiceLinkResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_oauth_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OAuthServiceLinkResponse.ProtoReflect.Descriptor instead.
+func (*OAuthServiceLinkResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_oauth_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *OAuthServiceLinkResponse) GetSession() *Session {
+	if x != nil {
+		return x.Session
+	}
+	return nil
+}
+
+type OAuthServiceUnlinkRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Provider      string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OAuthServiceUnlinkRequest) Reset() {
+	*x = OAuthServiceUnlinkRequest{}
+	mi := &file_auth_v1_oauth_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OAuthServiceUnlinkRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OAuthServiceUnlinkRequest) ProtoMessage() {}
+
+func (x *OAuthServiceUnlinkRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_oauth_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OAuthServiceUnlinkRequest.ProtoReflect.Descriptor instead.
+func (*OAuthServiceUnlinkRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_oauth_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *OAuthServiceUnlinkRequest) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+type OAuthServiceUnlinkResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Session       *Session               `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OAuthServiceUnlinkResponse) Reset() {
+	*x = OAuthServiceUnlinkResponse{}
+	mi := &file_auth_v1_oauth_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OAuthServiceUnlinkResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OAuthServiceUnlinkResponse) ProtoMessage() {}
+
+func (x *OAuthServiceUnlinkResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_oauth_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OAuthServiceUnlinkResponse.ProtoReflect.Descriptor instead.
+func (*OAuthServiceUnlinkResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_oauth_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *OAuthServiceUnlinkResponse) GetSession() *Session {
+	if x != nil {
+		return x.Session
+	}
+	return nil
+}
+
 var File_auth_v1_oauth_proto protoreflect.FileDescriptor
 
 const file_auth_v1_oauth_proto_rawDesc = "" +
@@ -365,11 +557,13 @@ const file_auth_v1_oauth_proto_rawDesc = "" +
 	"\x13auth/v1/oauth.proto\x12\aauth.v1\x1a\x14auth/v1/common.proto\x1a%auth/v1/predefined_string_rules.proto\x1a\x1bbuf/validate/validate.proto\"\x1b\n" +
 	"\x19OAuthServiceStatusRequest\"B\n" +
 	"\x1aOAuthServiceStatusResponse\x12$\n" +
-	"\tproviders\x18\x01 \x03(\tB\x06\xbaH\x03\xc8\x01\x01R\tproviders\"z\n" +
+	"\tproviders\x18\x01 \x03(\tB\x06\xbaH\x03\xc8\x01\x01R\tproviders\"\xb9\x01\n" +
 	"\x18OAuthServiceLoginRequest\x12\x1c\n" +
-	"\x05token\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05token\x12\x1c\n" +
-	"\x05email\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05email\x12\"\n" +
-	"\bprovider\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\bprovider\"\xdc\x02\n" +
+	"\x05token\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05token\x12\"\n" +
+	"\bprovider\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\bprovider\x12-\n" +
+	"\x0eemail_verified\x18\x03 \x01(\bB\x06\xbaH\x03\xc8\x01\x01R\remailVerified\x12\"\n" +
+	"\x05email\x18\x04 \x01(\tB\a\xbaH\x04r\x02`\x01H\x00R\x05email\x88\x01\x01B\b\n" +
+	"\x06_email\"\xdc\x02\n" +
 	"\x19OAuthServiceLoginResponse\x12/\n" +
 	"\x13registration_needed\x18\x01 \x01(\bR\x12registrationNeeded\x12'\n" +
 	"\x0fregistration_id\x18\x02 \x01(\tR\x0eregistrationId\x12*\n" +
@@ -387,11 +581,22 @@ const file_auth_v1_oauth_proto_rawDesc = "" +
 	"\bpassword\x18\a \x01(\tB\t\xbaH\x06r\x04\x88\xf1\x04\x01R\bpassword:Q\xbaHN\x1aL\n" +
 	"\bpassword\x1a@this.password_enabled ? has(this.password) : !has(this.password)\"R\n" +
 	"\x1cOAuthServiceRegisterResponse\x122\n" +
-	"\asession\x18\x01 \x01(\v2\x10.auth.v1.SessionB\x06\xbaH\x03\xc8\x01\x01R\asession2\x90\x02\n" +
+	"\asession\x18\x01 \x01(\v2\x10.auth.v1.SessionB\x06\xbaH\x03\xc8\x01\x01R\asession\"[\n" +
+	"\x17OAuthServiceLinkRequest\x12\"\n" +
+	"\bprovider\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\bprovider\x12\x1c\n" +
+	"\x05token\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05token\"N\n" +
+	"\x18OAuthServiceLinkResponse\x122\n" +
+	"\asession\x18\x01 \x01(\v2\x10.auth.v1.SessionB\x06\xbaH\x03\xc8\x01\x01R\asession\"?\n" +
+	"\x19OAuthServiceUnlinkRequest\x12\"\n" +
+	"\bprovider\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\bprovider\"P\n" +
+	"\x1aOAuthServiceUnlinkResponse\x122\n" +
+	"\asession\x18\x01 \x01(\v2\x10.auth.v1.SessionB\x06\xbaH\x03\xc8\x01\x01R\asession2\xb4\x03\n" +
 	"\fOAuthService\x12S\n" +
 	"\x06Status\x12\".auth.v1.OAuthServiceStatusRequest\x1a#.auth.v1.OAuthServiceStatusResponse\"\x00\x12Y\n" +
 	"\bRegister\x12$.auth.v1.OAuthServiceRegisterRequest\x1a%.auth.v1.OAuthServiceRegisterResponse\"\x00\x12P\n" +
-	"\x05Login\x12!.auth.v1.OAuthServiceLoginRequest\x1a\".auth.v1.OAuthServiceLoginResponse\"\x00B\x7f\n" +
+	"\x05Login\x12!.auth.v1.OAuthServiceLoginRequest\x1a\".auth.v1.OAuthServiceLoginResponse\"\x00\x12M\n" +
+	"\x04Link\x12 .auth.v1.OAuthServiceLinkRequest\x1a!.auth.v1.OAuthServiceLinkResponse\"\x00\x12S\n" +
+	"\x06Unlink\x12\".auth.v1.OAuthServiceUnlinkRequest\x1a#.auth.v1.OAuthServiceUnlinkResponse\"\x00B\x7f\n" +
 	"\vcom.auth.v1B\n" +
 	"OauthProtoP\x01Z'fbt/backend/gen/proto/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\x06proto3"
 
@@ -407,7 +612,7 @@ func file_auth_v1_oauth_proto_rawDescGZIP() []byte {
 	return file_auth_v1_oauth_proto_rawDescData
 }
 
-var file_auth_v1_oauth_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_auth_v1_oauth_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_auth_v1_oauth_proto_goTypes = []any{
 	(*OAuthServiceStatusRequest)(nil),    // 0: auth.v1.OAuthServiceStatusRequest
 	(*OAuthServiceStatusResponse)(nil),   // 1: auth.v1.OAuthServiceStatusResponse
@@ -415,22 +620,32 @@ var file_auth_v1_oauth_proto_goTypes = []any{
 	(*OAuthServiceLoginResponse)(nil),    // 3: auth.v1.OAuthServiceLoginResponse
 	(*OAuthServiceRegisterRequest)(nil),  // 4: auth.v1.OAuthServiceRegisterRequest
 	(*OAuthServiceRegisterResponse)(nil), // 5: auth.v1.OAuthServiceRegisterResponse
-	(*Session)(nil),                      // 6: auth.v1.Session
+	(*OAuthServiceLinkRequest)(nil),      // 6: auth.v1.OAuthServiceLinkRequest
+	(*OAuthServiceLinkResponse)(nil),     // 7: auth.v1.OAuthServiceLinkResponse
+	(*OAuthServiceUnlinkRequest)(nil),    // 8: auth.v1.OAuthServiceUnlinkRequest
+	(*OAuthServiceUnlinkResponse)(nil),   // 9: auth.v1.OAuthServiceUnlinkResponse
+	(*Session)(nil),                      // 10: auth.v1.Session
 }
 var file_auth_v1_oauth_proto_depIdxs = []int32{
-	6, // 0: auth.v1.OAuthServiceLoginResponse.session:type_name -> auth.v1.Session
-	6, // 1: auth.v1.OAuthServiceRegisterResponse.session:type_name -> auth.v1.Session
-	0, // 2: auth.v1.OAuthService.Status:input_type -> auth.v1.OAuthServiceStatusRequest
-	4, // 3: auth.v1.OAuthService.Register:input_type -> auth.v1.OAuthServiceRegisterRequest
-	2, // 4: auth.v1.OAuthService.Login:input_type -> auth.v1.OAuthServiceLoginRequest
-	1, // 5: auth.v1.OAuthService.Status:output_type -> auth.v1.OAuthServiceStatusResponse
-	5, // 6: auth.v1.OAuthService.Register:output_type -> auth.v1.OAuthServiceRegisterResponse
-	3, // 7: auth.v1.OAuthService.Login:output_type -> auth.v1.OAuthServiceLoginResponse
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	10, // 0: auth.v1.OAuthServiceLoginResponse.session:type_name -> auth.v1.Session
+	10, // 1: auth.v1.OAuthServiceRegisterResponse.session:type_name -> auth.v1.Session
+	10, // 2: auth.v1.OAuthServiceLinkResponse.session:type_name -> auth.v1.Session
+	10, // 3: auth.v1.OAuthServiceUnlinkResponse.session:type_name -> auth.v1.Session
+	0,  // 4: auth.v1.OAuthService.Status:input_type -> auth.v1.OAuthServiceStatusRequest
+	4,  // 5: auth.v1.OAuthService.Register:input_type -> auth.v1.OAuthServiceRegisterRequest
+	2,  // 6: auth.v1.OAuthService.Login:input_type -> auth.v1.OAuthServiceLoginRequest
+	6,  // 7: auth.v1.OAuthService.Link:input_type -> auth.v1.OAuthServiceLinkRequest
+	8,  // 8: auth.v1.OAuthService.Unlink:input_type -> auth.v1.OAuthServiceUnlinkRequest
+	1,  // 9: auth.v1.OAuthService.Status:output_type -> auth.v1.OAuthServiceStatusResponse
+	5,  // 10: auth.v1.OAuthService.Register:output_type -> auth.v1.OAuthServiceRegisterResponse
+	3,  // 11: auth.v1.OAuthService.Login:output_type -> auth.v1.OAuthServiceLoginResponse
+	7,  // 12: auth.v1.OAuthService.Link:output_type -> auth.v1.OAuthServiceLinkResponse
+	9,  // 13: auth.v1.OAuthService.Unlink:output_type -> auth.v1.OAuthServiceUnlinkResponse
+	9,  // [9:14] is the sub-list for method output_type
+	4,  // [4:9] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_auth_v1_oauth_proto_init() }
@@ -440,13 +655,14 @@ func file_auth_v1_oauth_proto_init() {
 	}
 	file_auth_v1_common_proto_init()
 	file_auth_v1_predefined_string_rules_proto_init()
+	file_auth_v1_oauth_proto_msgTypes[2].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_v1_oauth_proto_rawDesc), len(file_auth_v1_oauth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

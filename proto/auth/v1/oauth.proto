@@ -10,6 +10,8 @@ service OAuthService {
   rpc Status(OAuthServiceStatusRequest) returns (OAuthServiceStatusResponse) {}
   rpc Register(OAuthServiceRegisterRequest) returns (OAuthServiceRegisterResponse) {}
   rpc Login(OAuthServiceLoginRequest) returns (OAuthServiceLoginResponse) {}
+  rpc Link(OAuthServiceLinkRequest) returns (OAuthServiceLinkResponse) {}
+  rpc Unlink(OAuthServiceUnlinkRequest) returns (OAuthServiceUnlinkResponse) {}
 }
 
 message OAuthServiceStatusRequest {}
@@ -19,8 +21,9 @@ message OAuthServiceStatusResponse {
 
 message OAuthServiceLoginRequest {
   string token = 1 [(buf.validate.field).required = true];
-  string email = 2 [(buf.validate.field).required = true];
-  string provider = 3 [(buf.validate.field).required = true];
+  string provider = 2 [(buf.validate.field).required = true];
+  bool email_verified = 3 [(buf.validate.field).required = true];
+  optional string email = 4 [(buf.validate.field).string.email = true];
 }
 message OAuthServiceLoginResponse {
   option (buf.validate.message).cel = {
@@ -58,5 +61,20 @@ message OAuthServiceRegisterRequest {
   string password = 7 [(buf.validate.field).string.(password_component) = true];
 }
 message OAuthServiceRegisterResponse {
+  Session session = 1 [(buf.validate.field).required = true];
+}
+
+message OAuthServiceLinkRequest {
+  string provider = 1 [(buf.validate.field).required = true];
+  string token = 2 [(buf.validate.field).required = true];
+}
+message OAuthServiceLinkResponse {
+  Session session = 1 [(buf.validate.field).required = true];
+}
+
+message OAuthServiceUnlinkRequest {
+  string provider = 1 [(buf.validate.field).required = true];
+}
+message OAuthServiceUnlinkResponse {
   Session session = 1 [(buf.validate.field).required = true];
 }

@@ -39,6 +39,10 @@ const (
 	OAuthServiceRegisterProcedure = "/auth.v1.OAuthService/Register"
 	// OAuthServiceLoginProcedure is the fully-qualified name of the OAuthService's Login RPC.
 	OAuthServiceLoginProcedure = "/auth.v1.OAuthService/Login"
+	// OAuthServiceLinkProcedure is the fully-qualified name of the OAuthService's Link RPC.
+	OAuthServiceLinkProcedure = "/auth.v1.OAuthService/Link"
+	// OAuthServiceUnlinkProcedure is the fully-qualified name of the OAuthService's Unlink RPC.
+	OAuthServiceUnlinkProcedure = "/auth.v1.OAuthService/Unlink"
 )
 
 // OAuthServiceClient is a client for the auth.v1.OAuthService service.
@@ -46,6 +50,8 @@ type OAuthServiceClient interface {
 	Status(context.Context, *v1.OAuthServiceStatusRequest) (*v1.OAuthServiceStatusResponse, error)
 	Register(context.Context, *v1.OAuthServiceRegisterRequest) (*v1.OAuthServiceRegisterResponse, error)
 	Login(context.Context, *v1.OAuthServiceLoginRequest) (*v1.OAuthServiceLoginResponse, error)
+	Link(context.Context, *v1.OAuthServiceLinkRequest) (*v1.OAuthServiceLinkResponse, error)
+	Unlink(context.Context, *v1.OAuthServiceUnlinkRequest) (*v1.OAuthServiceUnlinkResponse, error)
 }
 
 // NewOAuthServiceClient constructs a client for the auth.v1.OAuthService service. By default, it
@@ -77,6 +83,18 @@ func NewOAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(oAuthServiceMethods.ByName("Login")),
 			connect.WithClientOptions(opts...),
 		),
+		link: connect.NewClient[v1.OAuthServiceLinkRequest, v1.OAuthServiceLinkResponse](
+			httpClient,
+			baseURL+OAuthServiceLinkProcedure,
+			connect.WithSchema(oAuthServiceMethods.ByName("Link")),
+			connect.WithClientOptions(opts...),
+		),
+		unlink: connect.NewClient[v1.OAuthServiceUnlinkRequest, v1.OAuthServiceUnlinkResponse](
+			httpClient,
+			baseURL+OAuthServiceUnlinkProcedure,
+			connect.WithSchema(oAuthServiceMethods.ByName("Unlink")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -85,6 +103,8 @@ type oAuthServiceClient struct {
 	status   *connect.Client[v1.OAuthServiceStatusRequest, v1.OAuthServiceStatusResponse]
 	register *connect.Client[v1.OAuthServiceRegisterRequest, v1.OAuthServiceRegisterResponse]
 	login    *connect.Client[v1.OAuthServiceLoginRequest, v1.OAuthServiceLoginResponse]
+	link     *connect.Client[v1.OAuthServiceLinkRequest, v1.OAuthServiceLinkResponse]
+	unlink   *connect.Client[v1.OAuthServiceUnlinkRequest, v1.OAuthServiceUnlinkResponse]
 }
 
 // Status calls auth.v1.OAuthService.Status.
@@ -114,11 +134,31 @@ func (c *oAuthServiceClient) Login(ctx context.Context, req *v1.OAuthServiceLogi
 	return nil, err
 }
 
+// Link calls auth.v1.OAuthService.Link.
+func (c *oAuthServiceClient) Link(ctx context.Context, req *v1.OAuthServiceLinkRequest) (*v1.OAuthServiceLinkResponse, error) {
+	response, err := c.link.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// Unlink calls auth.v1.OAuthService.Unlink.
+func (c *oAuthServiceClient) Unlink(ctx context.Context, req *v1.OAuthServiceUnlinkRequest) (*v1.OAuthServiceUnlinkResponse, error) {
+	response, err := c.unlink.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
 // OAuthServiceHandler is an implementation of the auth.v1.OAuthService service.
 type OAuthServiceHandler interface {
 	Status(context.Context, *v1.OAuthServiceStatusRequest) (*v1.OAuthServiceStatusResponse, error)
 	Register(context.Context, *v1.OAuthServiceRegisterRequest) (*v1.OAuthServiceRegisterResponse, error)
 	Login(context.Context, *v1.OAuthServiceLoginRequest) (*v1.OAuthServiceLoginResponse, error)
+	Link(context.Context, *v1.OAuthServiceLinkRequest) (*v1.OAuthServiceLinkResponse, error)
+	Unlink(context.Context, *v1.OAuthServiceUnlinkRequest) (*v1.OAuthServiceUnlinkResponse, error)
 }
 
 // NewOAuthServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -146,6 +186,18 @@ func NewOAuthServiceHandler(svc OAuthServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(oAuthServiceMethods.ByName("Login")),
 		connect.WithHandlerOptions(opts...),
 	)
+	oAuthServiceLinkHandler := connect.NewUnaryHandlerSimple(
+		OAuthServiceLinkProcedure,
+		svc.Link,
+		connect.WithSchema(oAuthServiceMethods.ByName("Link")),
+		connect.WithHandlerOptions(opts...),
+	)
+	oAuthServiceUnlinkHandler := connect.NewUnaryHandlerSimple(
+		OAuthServiceUnlinkProcedure,
+		svc.Unlink,
+		connect.WithSchema(oAuthServiceMethods.ByName("Unlink")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/auth.v1.OAuthService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case OAuthServiceStatusProcedure:
@@ -154,6 +206,10 @@ func NewOAuthServiceHandler(svc OAuthServiceHandler, opts ...connect.HandlerOpti
 			oAuthServiceRegisterHandler.ServeHTTP(w, r)
 		case OAuthServiceLoginProcedure:
 			oAuthServiceLoginHandler.ServeHTTP(w, r)
+		case OAuthServiceLinkProcedure:
+			oAuthServiceLinkHandler.ServeHTTP(w, r)
+		case OAuthServiceUnlinkProcedure:
+			oAuthServiceUnlinkHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -173,4 +229,12 @@ func (UnimplementedOAuthServiceHandler) Register(context.Context, *v1.OAuthServi
 
 func (UnimplementedOAuthServiceHandler) Login(context.Context, *v1.OAuthServiceLoginRequest) (*v1.OAuthServiceLoginResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.OAuthService.Login is not implemented"))
+}
+
+func (UnimplementedOAuthServiceHandler) Link(context.Context, *v1.OAuthServiceLinkRequest) (*v1.OAuthServiceLinkResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.OAuthService.Link is not implemented"))
+}
+
+func (UnimplementedOAuthServiceHandler) Unlink(context.Context, *v1.OAuthServiceUnlinkRequest) (*v1.OAuthServiceUnlinkResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.OAuthService.Unlink is not implemented"))
 }

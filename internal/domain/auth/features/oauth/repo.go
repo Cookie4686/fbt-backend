@@ -20,6 +20,7 @@ func NewRepo(db *pgxpool.Pool) Repo {
 type Repo interface {
 	GetUserOAuth(ctx context.Context, provider string, idToken string) (*model.UserOAuth, error)
 	LinkOAuth(ctx context.Context, provider string, userID string, idToken string) error
+	UnLinkOAuth(ctx context.Context, provider string, userID string) error
 	CreateOAuthRegistration(ctx context.Context, provider string, oauthRegistration *model.OauthRegistration) error
 	GetOAuthRegistration(ctx context.Context, registrationId string) (*model.OauthRegistration, error)
 	DeleteOAuthRegistration(ctx context.Context, provider string, idToken string) error
@@ -61,9 +62,22 @@ func (s *repo) LinkOAuth(ctx context.Context, provider string, userID string, id
 	return err
 }
 
+func (s *repo) UnLinkOAuth(ctx context.Context, provider string, userID string) error {
+	query := `
+		DELETE FROM user_oauth
+		WHERE user_oauth.oauth_provider_id = (
+				SELECT oauth_provider_id FROM oauth_providers
+				WHERE oauth_providers.name = @provider)
+		AND user_oauth.user_id = @user_id
+	`
+	args := pgx.NamedArgs{"user_id": userID, "provider": provider}
+	_, err := s.db.Exec(ctx, query, args)
+	return err
+}
+
 func (s *repo) CreateOAuthRegistration(ctx context.Context, provider string, oauthRegistration *model.OauthRegistration) error {
 	query := `
-		INSERT INTO oauth_registration(oauth_provider_id, id_token, registration_id, expires_at)
+		INSERT INTO oauth_registration(oauth_provider_id, id_token, registration_id, email_verified, expires_at)
 		VALUES (
 			(
 				SELECT oauth_provider_id FROM oauth_providers
@@ -71,6 +85,7 @@ func (s *repo) CreateOAuthRegistration(ctx context.Context, provider string, oau
 			),
 			@id_token,
 			@registration_id,
+			@email_verified,
 			@expires_at
 		)
 	`
@@ -78,6 +93,7 @@ func (s *repo) CreateOAuthRegistration(ctx context.Context, provider string, oau
 		"provider":        provider,
 		"id_token":        oauthRegistration.IDToken,
 		"registration_id": oauthRegistration.RegistrationID,
+		"email_verified":  oauthRegistration.EmailVerified,
 		"expires_at":      oauthRegistration.ExpiresAt,
 	}
 	_, err := s.db.Exec(ctx, query, args)

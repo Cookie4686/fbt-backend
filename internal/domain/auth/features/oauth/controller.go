@@ -50,7 +50,7 @@ func (s *Server) Register(ctx context.Context, in *authv1.OAuthServiceRegisterRe
 		Id:              util.GenerateBase32UUID(),
 		Username:        in.Username,
 		Email:           in.Email,
-		EmailVerified:   false,
+		EmailVerified:   oauthRegistration.EmailVerified,
 		Password:        pgtype.Text{String: "", Valid: false},
 		PasswordSalt:    pgtype.Text{String: "", Valid: false},
 		PasswordEnabled: in.PasswordEnabled,
@@ -87,8 +87,8 @@ func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest)
 	if err == nil {
 		// Already Register OAuth
 		userId = userOAuth.UserID
-	} else if in.Email != "" {
-		user, err := s.service.GetUserByEmail(ctx, in.Email)
+	} else if in.Email != nil {
+		user, err := s.service.GetUserByEmail(ctx, *in.Email)
 		if err == nil {
 			// Link OAuth to existing email
 			err := s.repo.LinkOAuth(ctx, in.Provider, user.Id, in.Token)
@@ -115,6 +115,7 @@ func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest)
 		oauthRegistration := &model.OauthRegistration{
 			RegistrationID: util.GenerateBase32UUID(),
 			IDToken:        in.Token,
+			EmailVerified:  in.EmailVerified,
 			ExpiresAt:      time.Now().Add(model.SessionExpiresIn),
 		}
 
@@ -141,4 +142,40 @@ func (s *Server) Status(ctx context.Context, in *authv1.OAuthServiceStatusReques
 	}
 
 	return &authv1.OAuthServiceStatusResponse{Providers: providers}, nil
+}
+
+func (s *Server) Link(ctx context.Context, in *authv1.OAuthServiceLinkRequest) (*authv1.OAuthServiceLinkResponse, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	auth := ctx.Value("auth").(*model.Auth)
+
+	err := s.repo.LinkOAuth(ctx, in.Provider, auth.User.Id, in.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	session, err := s.service.CreateSession(ctx, auth.User.Id, true)
+	if err != nil {
+		return nil, err
+	}
+	return &authv1.OAuthServiceLinkResponse{Session: session.ToProto()}, nil
+}
+
+func (s *Server) Unlink(ctx context.Context, in *authv1.OAuthServiceUnlinkRequest) (*authv1.OAuthServiceUnlinkResponse, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	auth := ctx.Value("auth").(*model.Auth)
+
+	err := s.repo.UnLinkOAuth(ctx, in.Provider, auth.User.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	session, err := s.service.CreateSession(ctx, auth.User.Id, true)
+	if err != nil {
+		return nil, err
+	}
+	return &authv1.OAuthServiceUnlinkResponse{Session: session.ToProto()}, nil
 }

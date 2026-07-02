@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "auth/v1/common.proto";
+import "buf/validate/validate.proto";
+
+service EmailService {
+  rpc SendOTP(EmailServiceSendOTPRequest) returns (EmailServiceSendOTPResponse) {}
+  rpc Verify(EmailServiceVerifyRequest) returns (EmailServiceVerifyResponse) {}
+}
+
+message EmailServiceSendOTPRequest {
+  string email = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.email = true
+  ];
+}
+message EmailServiceSendOTPResponse {
+  string verification_id = 1 [(buf.validate.field).required = true];
+}
+
+message EmailServiceVerifyRequest {
+  string verification_id = 1 [(buf.validate.field).required = true];
+  string otp = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.len = 6
+  ];
+}
+message EmailServiceVerifyResponse {
+  Session session = 1 [(buf.validate.field).required = true];
+}

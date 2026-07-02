@@ -39,7 +39,7 @@ func (s *service) CreateSession(ctx context.Context, userId string, twoFactorVer
 
 func (s *service) Validate(ctx context.Context, sessionId string) (*model.Auth, error) {
 	query := `
-		SELECT session_id, sessions.user_id, expires_at, two_factor_verified, users.user_id, username, email, email_verified, password, password_salt
+		SELECT session_id, sessions.user_id, expires_at, two_factor_verified, users.user_id, username, email, email_verified, password, password_salt, password_enabled
 		FROM sessions
 		LEFT JOIN users ON sessions.user_id = users.user_id
 		WHERE session_id = @sessionId
@@ -59,6 +59,7 @@ func (s *service) Validate(ctx context.Context, sessionId string) (*model.Auth, 
 		&auth.User.EmailVerified,
 		&auth.User.Password,
 		&auth.User.PasswordSalt,
+		&auth.User.PasswordEnabled,
 	)
 	if err == pgx.ErrNoRows {
 		return nil, errors.NotFound
