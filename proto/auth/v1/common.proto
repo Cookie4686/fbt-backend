@@ -26,3 +26,14 @@ message User {
   bool email_verified = 4;
   bool password_enabled = 5;
 }
+
+message Passkey {
+  string passkey_id = 1;
+  bytes public_key = 2;
+  string user_id = 3;
+  string webauthn_id = 4;
+  int64 counter = 5;
+  string device_type = 6;
+  bool backed_up = 7;
+  repeated string transports = 8;
+}

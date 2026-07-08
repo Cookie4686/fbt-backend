@@ -32,7 +32,9 @@ func IsPrivateMethod(fullMethod string) bool {
 		authv1connect.CredentialServiceRegisterProcedure,
 		authv1connect.CredentialServiceLoginProcedure,
 		authv1connect.OAuthServiceRegisterProcedure,
-		authv1connect.OAuthServiceLoginProcedure:
+		authv1connect.OAuthServiceLoginProcedure,
+		authv1connect.WebAuthnServiceGetUserPasskeyProcedure,
+		authv1connect.WebAuthnServiceUpdatePasskeyCounterProcedure:
 		return false
 	default:
 		return true
