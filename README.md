@@ -1,3 +1,5 @@
+[![wakatime](https://wakatime.com/badge/github/Cookie4686/fbt-backend.svg)](https://wakatime.com/badge/github/Cookie4686/fbt-backend)
+
 # About this project
 
 โปรเจคนี้ทำมาเพื่อเรียนรู้การพัฒนาแอปพลิเคชันด้วยภาษา go โดยมีขอบเขตค่อนข้างกว้างเพื่อจะได้เรียนรู้อย่างครอบคลุม  
