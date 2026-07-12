@@ -12,7 +12,6 @@ import (
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/util"
 	"net/http"
-	"time"
 
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -42,13 +41,7 @@ func (s *con) Register(ctx context.Context, req *authv1.CredentialServiceRegiste
 		PasswordSalt:    pgtype.Text{String: base64.StdEncoding.EncodeToString(salt), Valid: true},
 		PasswordEnabled: true,
 	}
-	session := &model.Session{
-		Id:                util.GenerateBase64UUID(),
-		UserId:            user.Id,
-		CreatedAt:         time.Now(),
-		ExpiresAt:         time.Now().Add(model.SessionExpiresIn),
-		TwoFactorVerified: false,
-	}
+	session := model.NewSession(user.Id, false)
 	err := s.repo.Register(ctx, user, session)
 	if err != nil {
 		return nil, err

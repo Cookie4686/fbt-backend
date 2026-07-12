@@ -174,12 +174,13 @@ func (s *repo) OAuthRegister(ctx context.Context, registrationId string, user *m
 	)
 
 	batch.Queue(`
-		INSERT INTO sessions(session_id, user_id, expires_at, two_factor_verified)
-		VALUES (@sessionId, @sessionUserId, @expiresAt, @twoFactorVerified);
+		INSERT INTO sessions(session_id, user_id, created_at, expires_at, two_factor_verified)
+		VALUES (@sessionId, @sessionUserId, @createdAt, @expiresAt, @twoFactorVerified);
 	`,
 		pgx.NamedArgs{
 			"sessionId":         session.Id,
 			"sessionUserId":     session.UserId,
+			"createdAt":         session.CreatedAt,
 			"expiresAt":         session.ExpiresAt,
 			"twoFactorVerified": session.TwoFactorVerified,
 		},

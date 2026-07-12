@@ -2,6 +2,7 @@ package model
 
 import (
 	authv1 "fbt/backend/gen/proto/go/auth/v1"
+	"fbt/backend/internal/util"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -37,6 +38,16 @@ type Session struct {
 	CreatedAt         time.Time `db:"created_at"`
 	ExpiresAt         time.Time `db:"expires_at"`
 	TwoFactorVerified bool      `db:"two_factor_verified"`
+}
+
+func NewSession(userId string, twoFactorVerified bool) *Session {
+	return &Session{
+		Id:                util.GenerateBase64UUID(),
+		UserId:            userId,
+		CreatedAt:         time.Now(),
+		ExpiresAt:         time.Now().Add(SessionExpiresIn),
+		TwoFactorVerified: twoFactorVerified,
+	}
 }
 
 func (s *Session) ToProto() *authv1.Session {

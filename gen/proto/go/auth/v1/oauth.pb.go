@@ -106,8 +106,8 @@ type OAuthServiceLoginRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	Provider      string                 `protobuf:"bytes,2,opt,name=provider,proto3" json:"provider,omitempty"`
-	EmailVerified bool                   `protobuf:"varint,3,opt,name=email_verified,json=emailVerified,proto3" json:"email_verified,omitempty"`
-	Email         *string                `protobuf:"bytes,4,opt,name=email,proto3,oneof" json:"email,omitempty"`
+	Email         *string                `protobuf:"bytes,3,opt,name=email,proto3,oneof" json:"email,omitempty"`
+	EmailVerified bool                   `protobuf:"varint,4,opt,name=email_verified,json=emailVerified,proto3" json:"email_verified,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -156,18 +156,18 @@ func (x *OAuthServiceLoginRequest) GetProvider() string {
 	return ""
 }
 
-func (x *OAuthServiceLoginRequest) GetEmailVerified() bool {
-	if x != nil {
-		return x.EmailVerified
-	}
-	return false
-}
-
 func (x *OAuthServiceLoginRequest) GetEmail() string {
 	if x != nil && x.Email != nil {
 		return *x.Email
 	}
 	return ""
+}
+
+func (x *OAuthServiceLoginRequest) GetEmailVerified() bool {
+	if x != nil {
+		return x.EmailVerified
+	}
+	return false
 }
 
 type OAuthServiceLoginResponse struct {
@@ -557,12 +557,12 @@ const file_auth_v1_oauth_proto_rawDesc = "" +
 	"\x13auth/v1/oauth.proto\x12\aauth.v1\x1a\x14auth/v1/common.proto\x1a%auth/v1/predefined_string_rules.proto\x1a\x1bbuf/validate/validate.proto\"\x1b\n" +
 	"\x19OAuthServiceStatusRequest\"B\n" +
 	"\x1aOAuthServiceStatusResponse\x12$\n" +
-	"\tproviders\x18\x01 \x03(\tB\x06\xbaH\x03\xc8\x01\x01R\tproviders\"\xb9\x01\n" +
+	"\tproviders\x18\x01 \x03(\tB\x06\xbaH\x03\xc8\x01\x01R\tproviders\"\xb1\x01\n" +
 	"\x18OAuthServiceLoginRequest\x12\x1c\n" +
 	"\x05token\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05token\x12\"\n" +
-	"\bprovider\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\bprovider\x12-\n" +
-	"\x0eemail_verified\x18\x03 \x01(\bB\x06\xbaH\x03\xc8\x01\x01R\remailVerified\x12\"\n" +
-	"\x05email\x18\x04 \x01(\tB\a\xbaH\x04r\x02`\x01H\x00R\x05email\x88\x01\x01B\b\n" +
+	"\bprovider\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\bprovider\x12\"\n" +
+	"\x05email\x18\x03 \x01(\tB\a\xbaH\x04r\x02`\x01H\x00R\x05email\x88\x01\x01\x12%\n" +
+	"\x0eemail_verified\x18\x04 \x01(\bR\remailVerifiedB\b\n" +
 	"\x06_email\"\xdc\x02\n" +
 	"\x19OAuthServiceLoginResponse\x12/\n" +
 	"\x13registration_needed\x18\x01 \x01(\bR\x12registrationNeeded\x12'\n" +

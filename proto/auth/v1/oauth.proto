@@ -22,8 +22,8 @@ message OAuthServiceStatusResponse {
 message OAuthServiceLoginRequest {
   string token = 1 [(buf.validate.field).required = true];
   string provider = 2 [(buf.validate.field).required = true];
-  bool email_verified = 3 [(buf.validate.field).required = true];
-  optional string email = 4 [(buf.validate.field).string.email = true];
+  optional string email = 3 [(buf.validate.field).string.email = true];
+  bool email_verified = 4;
 }
 message OAuthServiceLoginResponse {
   option (buf.validate.message).cel = {

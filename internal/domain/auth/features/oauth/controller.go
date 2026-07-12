@@ -63,12 +63,7 @@ func (s *Server) Register(ctx context.Context, in *authv1.OAuthServiceRegisterRe
 		user.PasswordSalt = pgtype.Text{String: base64.StdEncoding.EncodeToString(salt), Valid: true}
 	}
 
-	session := &model.Session{
-		Id:                util.GenerateBase64UUID(),
-		UserId:            user.Id,
-		ExpiresAt:         time.Now().Add(model.SessionExpiresIn),
-		TwoFactorVerified: false,
-	}
+	session := model.NewSession(user.Id, false)
 	err = s.repo.OAuthRegister(ctx, in.RegistrationId, user, session)
 	if err != nil {
 		return nil, err

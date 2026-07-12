@@ -4,7 +4,6 @@ import (
 	"context"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/errors"
-	"fbt/backend/internal/util"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -13,13 +12,7 @@ import (
 // SECURITY: Do we need to hash session id?
 
 func (s *service) CreateSession(ctx context.Context, userId string, twoFactorVerified bool) (*model.Session, error) {
-	session := &model.Session{
-		Id:                util.GenerateBase64UUID(),
-		UserId:            userId,
-		CreatedAt:         time.Now(),
-		ExpiresAt:         time.Now().Add(model.SessionExpiresIn),
-		TwoFactorVerified: twoFactorVerified,
-	}
+	session := model.NewSession(userId, twoFactorVerified)
 
 	query := `
 		INSERT INTO sessions(session_id, user_id, created_at, expires_at, two_factor_verified)
