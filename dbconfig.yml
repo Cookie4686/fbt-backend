@@ -1,0 +1,9 @@
+development:
+    dialect: postgres
+    datasource: host=${PGPORT} dbname=${PGDATABASE} user=${PGUSER} password=${PGPASSWORD} sslmode=disable
+    dir: sqlc/schema
+
+production:
+    dialect: postgres
+    datasource: host=${PGPORT} dbname=${PGDATABASE} user=${PGUSER} password=${PGPASSWORD} sslmode=require
+    dir: sqlc/schema
