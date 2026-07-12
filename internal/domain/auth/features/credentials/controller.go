@@ -45,6 +45,7 @@ func (s *con) Register(ctx context.Context, req *authv1.CredentialServiceRegiste
 	session := &model.Session{
 		Id:                util.GenerateBase64UUID(),
 		UserId:            user.Id,
+		CreatedAt:         time.Now(),
 		ExpiresAt:         time.Now().Add(model.SessionExpiresIn),
 		TwoFactorVerified: false,
 	}
@@ -63,7 +64,10 @@ func (s *con) Login(ctx context.Context, req *authv1.CredentialServiceLoginReque
 		return nil, err
 	}
 
-	// TODO: Handle Non-Credentials User
+	if !user.PasswordEnabled {
+		return nil, errors.Unauthorized
+	}
+
 	storedHash, err := base64.StdEncoding.DecodeString(user.Password.String)
 	if err != nil {
 		return nil, err

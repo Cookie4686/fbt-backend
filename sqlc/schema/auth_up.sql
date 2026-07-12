@@ -14,6 +14,7 @@ CREATE TABLE "users" (
 CREATE TABLE "sessions" (
 	"session_id" varchar(255) NOT NULL,
 	"user_id" varchar(255) NOT NULL,
+	"created_at" timestamp NOT NULL,
 	"expires_at" timestamp NOT NULL,
 	"two_factor_verified" boolean NOT NULL DEFAULT false,
 	CONSTRAINT "session_session_id_pk" PRIMARY KEY("session_id"),

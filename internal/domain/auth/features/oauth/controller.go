@@ -116,7 +116,7 @@ func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest)
 			RegistrationID: util.GenerateBase32UUID(),
 			IDToken:        in.Token,
 			EmailVerified:  in.EmailVerified,
-			ExpiresAt:      time.Now().Add(model.SessionExpiresIn),
+			ExpiresAt:      time.Now().Add(15 * time.Minute),
 		}
 
 		err := s.repo.CreateOAuthRegistration(ctx, in.Provider, oauthRegistration)

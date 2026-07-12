@@ -16,17 +16,19 @@ func (s *service) CreateSession(ctx context.Context, userId string, twoFactorVer
 	session := &model.Session{
 		Id:                util.GenerateBase64UUID(),
 		UserId:            userId,
+		CreatedAt:         time.Now(),
 		ExpiresAt:         time.Now().Add(model.SessionExpiresIn),
 		TwoFactorVerified: twoFactorVerified,
 	}
 
 	query := `
-		INSERT INTO sessions(session_id, user_id, expires_at, two_factor_verified)
-		VALUES (@sessionId, @userId, @expiresAt, @twoFactorVerified)
+		INSERT INTO sessions(session_id, user_id, created_at, expires_at, two_factor_verified)
+		VALUES (@sessionId, @userId, @createdAt, @expiresAt, @twoFactorVerified)
 	`
 	args := pgx.NamedArgs{
 		"sessionId":         session.Id,
 		"userId":            session.UserId,
+		"createdAt":         session.CreatedAt,
 		"expiresAt":         session.ExpiresAt,
 		"twoFactorVerified": session.TwoFactorVerified,
 	}
@@ -39,7 +41,7 @@ func (s *service) CreateSession(ctx context.Context, userId string, twoFactorVer
 
 func (s *service) Validate(ctx context.Context, sessionId string) (*model.Auth, error) {
 	query := `
-		SELECT session_id, sessions.user_id, expires_at, two_factor_verified, users.user_id, username, email, email_verified, password, password_salt, password_enabled
+		SELECT session_id, sessions.user_id, created_at, expires_at, two_factor_verified, users.user_id, username, email, email_verified, password, password_salt, password_enabled
 		FROM sessions
 		LEFT JOIN users ON sessions.user_id = users.user_id
 		WHERE session_id = @sessionId
@@ -51,6 +53,7 @@ func (s *service) Validate(ctx context.Context, sessionId string) (*model.Auth, 
 	err := row.Scan(
 		&auth.Session.Id,
 		&auth.Session.UserId,
+		&auth.Session.CreatedAt,
 		&auth.Session.ExpiresAt,
 		&auth.Session.TwoFactorVerified,
 		&auth.User.Id,
@@ -75,7 +78,15 @@ func (s *service) Validate(ctx context.Context, sessionId string) (*model.Auth, 
 		return nil, errors.SessionExpire
 	}
 	if time.Now().After(auth.Session.ExpiresAt.Add(-model.SessionExpiresIn / 2)) {
-		auth.Session.ExpiresAt = time.Now().Add(model.SessionExpiresIn)
+		newExpiresAt := time.Now().Add(model.SessionExpiresIn)
+		maxExpiresAt := auth.Session.CreatedAt.Add(model.SessionMaxAge)
+
+		if newExpiresAt.After(maxExpiresAt) {
+			auth.Session.ExpiresAt = maxExpiresAt
+		} else {
+			auth.Session.ExpiresAt = newExpiresAt
+		}
+
 		if err := s.UpdateSessionExpiration(ctx, &auth.Session); err != nil {
 			return nil, errors.DBError
 		}

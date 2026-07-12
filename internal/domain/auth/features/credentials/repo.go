@@ -37,18 +37,18 @@ func (s repo) Register(ctx context.Context, user *model.User, session *model.Ses
 		},
 	)
 	batch.Queue(`
-		INSERT INTO sessions(session_id, user_id, expires_at, two_factor_verified)
-		VALUES (@sessionId, @sessionUserId, @expiresAt, @twoFactorVerified);
+		INSERT INTO sessions(session_id, user_id, created_at, expires_at, two_factor_verified)
+		VALUES (@sessionId, @sessionUserId, @createdAt, @expiresAt, @twoFactorVerified);
 	`,
 		pgx.NamedArgs{
 			"sessionId":         session.Id,
 			"sessionUserId":     session.UserId,
+			"createdAt":         session.CreatedAt,
 			"expiresAt":         session.ExpiresAt,
 			"twoFactorVerified": session.TwoFactorVerified,
 		},
 	)
 
-	br := s.db.SendBatch(ctx, batch)
-	_, err := br.Exec()
+	_, err := s.db.SendBatch(ctx, batch).Exec()
 	return err
 }

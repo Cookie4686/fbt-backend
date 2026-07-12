@@ -9,6 +9,7 @@ import (
 )
 
 const SessionExpiresIn = 24 * time.Hour
+const SessionMaxAge = 72 * time.Hour
 
 type User struct {
 	Id              string      `db:"user_id"`
@@ -33,6 +34,7 @@ func (u *User) ToProto() *authv1.User {
 type Session struct {
 	Id                string    `db:"session_id"`
 	UserId            string    `db:"user_id"`
+	CreatedAt         time.Time `db:"created_at"`
 	ExpiresAt         time.Time `db:"expires_at"`
 	TwoFactorVerified bool      `db:"two_factor_verified"`
 }
