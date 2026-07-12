@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	"connectrpc.com/connect"
-	"connectrpc.com/validate"
 )
 
 func NewServer(d *util.Dependency) *http.Server {
@@ -23,7 +22,7 @@ func NewServer(d *util.Dependency) *http.Server {
 	opts := connect.WithInterceptors(
 		i.Logging(),
 		i.Auth(),
-		validate.NewInterceptor(),
+		i.Validator(),
 	)
 
 	auth.RegisterService(mux, d, opts)

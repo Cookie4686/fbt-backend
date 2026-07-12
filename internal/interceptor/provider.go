@@ -8,12 +8,14 @@ import (
 	"fbt/backend/internal/util"
 
 	"connectrpc.com/connect"
+	"connectrpc.com/validate"
 	"go.uber.org/zap"
 )
 
 type InterceptorProvider interface {
 	Auth() connect.UnaryInterceptorFunc
 	Logging() connect.UnaryInterceptorFunc
+	Validator() connect.Interceptor
 }
 
 type interceptorProvider struct {
@@ -51,10 +53,16 @@ func (s *interceptorProvider) Logging() connect.UnaryInterceptorFunc {
 			res, err := next(ctx, req)
 			if err != nil {
 				s.Logger.Error(req.Spec().Procedure, zap.String("error", err.Error()))
-			} else {
-				s.Logger.Info(req.Spec().Procedure)
+
+				if errors.IsPublicError(err) {
+					return res, err
+				}
+				// Hide Error Information
+				return res, errors.InternalError
 			}
-			return res, err
+
+			s.Logger.Info(req.Spec().Procedure)
+			return res, nil
 		}
 	}
 }
@@ -87,4 +95,8 @@ func (s *interceptorProvider) Auth() connect.UnaryInterceptorFunc {
 			return next(ctx, req)
 		}
 	}
+}
+
+func (s *interceptorProvider) Validator() connect.Interceptor {
+	return validate.NewInterceptor()
 }
