@@ -12,22 +12,24 @@ service WebAuthnService {
 }
 
 message WebAuthnServiceGetUserPasskeyRequest {
-  string passkey_id = 1 [(buf.validate.field).required = true];
+  string rp_id = 1 [(buf.validate.field).required = true];
+  string credential_id = 2 [(buf.validate.field).required = true];
 }
 message WebAuthnServiceGetUserPasskeyResponse {
-  Passkey passkey = 1 [(buf.validate.field).required = true];
+  WebAuthnCredential credential = 1 [(buf.validate.field).required = true];
 }
 
 message WebAuthnServiceCreateUserPasskeyRequest {
-  Passkey passkey = 1 [(buf.validate.field).required = true];
+  WebAuthnCredential credential = 1 [(buf.validate.field).required = true];
 }
 message WebAuthnServiceCreateUserPasskeyResponse {
-  Passkey passkey = 1 [(buf.validate.field).required = true];
+  WebAuthnCredential credential = 1 [(buf.validate.field).required = true];
 }
 
 message WebAuthnServiceUpdatePasskeyCounterRequest {
-  string passkey_id = 1 [(buf.validate.field).required = true];
-  int64 counter = 2;
+  string rp_id = 1 [(buf.validate.field).required = true];
+  string credential_id = 2 [(buf.validate.field).required = true];
+  int64 counter = 3;
 }
 message WebAuthnServiceUpdatePasskeyCounterResponse {
   Session session = 1 [(buf.validate.field).required = true];

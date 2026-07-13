@@ -86,6 +86,7 @@ func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest)
 		user, err := s.service.GetUserByEmail(ctx, *in.Email)
 		if err == nil {
 			// Link OAuth to existing email
+			// TODO: merge Link and Create Session Together
 			err := s.repo.LinkOAuth(ctx, in.Provider, user.Id, in.Token)
 			if err != nil {
 				return nil, err
@@ -129,6 +130,7 @@ func (s *Server) Status(ctx context.Context, in *authv1.OAuthServiceStatusReques
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// TODO
 	auth := ctx.Value("auth").(*model.Auth)
 
 	providers, err := s.repo.GetUserProvider(ctx, auth.User.Id)

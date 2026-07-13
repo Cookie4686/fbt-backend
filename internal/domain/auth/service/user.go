@@ -4,6 +4,7 @@ import (
 	"context"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/errors"
+	"fbt/backend/internal/util"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -11,7 +12,7 @@ import (
 func (s *service) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
 	query := `SELECT * FROM users WHERE username = @username`
 	args := pgx.NamedArgs{"username": username}
-	user, err := s.fetchUser(ctx, query, args)
+	user, err := util.FetchOne[model.User](s.DB, ctx, query, args)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return user, errors.NotFound
@@ -24,7 +25,7 @@ func (s *service) GetUserByUsername(ctx context.Context, username string) (*mode
 func (s *service) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	query := `SELECT * FROM users WHERE email = @email`
 	args := pgx.NamedArgs{"email": email}
-	user, err := s.fetchUser(ctx, query, args)
+	user, err := util.FetchOne[model.User](s.DB, ctx, query, args)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return user, errors.NotFound
@@ -32,18 +33,4 @@ func (s *service) GetUserByEmail(ctx context.Context, email string) (*model.User
 		return nil, err
 	}
 	return user, err
-}
-
-func (s *service) fetchUser(ctx context.Context, query string, args ...any) (*model.User, error) {
-	rows, err := s.DB.Query(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	user, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[model.User])
-	if err != nil {
-		return nil, err
-	}
-	return &user, nil
 }

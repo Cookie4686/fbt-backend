@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"database/sql"
 	"fbt/backend/internal/server"
 	"fbt/backend/internal/util"
 	"fmt"
@@ -10,6 +11,8 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,20 +34,22 @@ func NewTestLocalAPI(t *testing.T) (ctx context.Context, baseURL string) {
 }
 
 func ClearDatabase(t *testing.T, ctx context.Context, db *pgxpool.Pool) {
-	wd, err := os.Getwd()
+	sqlDB, err := sql.Open("pgx", db.Config().ConnString())
 	require.NoError(t, err)
 
-	for _, v := range []string{
-		"/sqlc/schema/auth_down.sql",
-		"/sqlc/schema/bookkeeping_down.sql",
-		"/sqlc/schema/auth_up.sql",
-		"/sqlc/schema/bookkeeping_up.sql",
-		"/sqlc/seed/auth.sql",
-	} {
-		file, err := os.ReadFile(filepath.Join(wd, v))
-		require.NoError(t, err)
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	gooseProvider, err := goose.NewProvider("postgres", sqlDB, os.DirFS(filepath.Join(wd, "/sqlc/schema")))
+	require.NoError(t, err)
 
-		_, err = db.Exec(ctx, string(file))
+	current, _, err := gooseProvider.GetVersions(ctx)
+	require.NoError(t, err)
+
+	if current != 0 {
+		_, err = gooseProvider.DownTo(ctx, 0)
 		require.NoError(t, err)
 	}
+
+	_, err = gooseProvider.Up(ctx)
+	require.NoError(t, err)
 }

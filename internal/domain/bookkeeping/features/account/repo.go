@@ -3,6 +3,7 @@ package account
 import (
 	"context"
 	"fbt/backend/internal/domain/bookkeeping/model"
+	"fbt/backend/internal/util"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -32,7 +33,7 @@ func (s repo) GetAll(ctx context.Context, userID string) (*[]model.Account, erro
 		"user_id": userID,
 	}
 
-	return s.fetchAccounts(ctx, query, args)
+	return util.FetchMany[model.Account](s.db, ctx, query, args)
 }
 
 func (s repo) Create(ctx context.Context, account *model.Account) (accountID int32, err error) {
@@ -81,15 +82,4 @@ func (s *repo) Delete(ctx context.Context, userID string, accountID int32) error
 
 	_, err := s.db.Exec(ctx, query, args)
 	return err
-}
-
-func (s *repo) fetchAccounts(ctx context.Context, query string, args ...any) (*[]model.Account, error) {
-	rows, err := s.db.Query(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	accounts, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Account])
-	return &accounts, err
 }

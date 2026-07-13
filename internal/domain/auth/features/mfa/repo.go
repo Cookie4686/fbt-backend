@@ -4,6 +4,7 @@ import (
 	"context"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/errors"
+	"fbt/backend/internal/util"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -51,7 +52,7 @@ func (s *repo) GetTOTP(ctx context.Context, userID string) (*model.MfaTotp, erro
 		WHERE user_id = @user_id
 	`
 	args := pgx.NamedArgs{"user_id": userID}
-	totp, err := s.fetchTOTP(ctx, query, args)
+	totp, err := util.FetchOne[model.MfaTotp](s.db, ctx, query, args)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, errors.NotFound
@@ -72,18 +73,4 @@ func (s *repo) UpsertTOTP(ctx context.Context, key string, userID string) error 
 	args := pgx.NamedArgs{"key": key, "user_id": userID}
 	_, err := s.db.Exec(ctx, query, args)
 	return err
-}
-
-func (s *repo) fetchTOTP(ctx context.Context, query string, args ...any) (*model.MfaTotp, error) {
-	rows, err := s.db.Query(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	totp, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[model.MfaTotp])
-	if err != nil {
-		return nil, err
-	}
-	return &totp, nil
 }

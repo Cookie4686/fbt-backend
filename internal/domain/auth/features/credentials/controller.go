@@ -57,10 +57,6 @@ func (s *con) Login(ctx context.Context, req *authv1.CredentialServiceLoginReque
 		return nil, err
 	}
 
-	if !user.PasswordEnabled {
-		return nil, errors.Unauthorized
-	}
-
 	storedHash, err := base64.StdEncoding.DecodeString(user.Password.String)
 	if err != nil {
 		return nil, err
@@ -72,7 +68,7 @@ func (s *con) Login(ctx context.Context, req *authv1.CredentialServiceLoginReque
 
 	// Compare Password Hash
 	passwordHash := argon2.IDKey([]byte(req.Password), storedSalt, 2, 19*1024, 1, 32)
-	if subtle.ConstantTimeCompare(passwordHash, storedHash) == 1 {
+	if subtle.ConstantTimeCompare(passwordHash, storedHash) == 1 && user.PasswordEnabled {
 		// Create Session in Database
 		session, err := s.service.CreateSession(ctx, user.Id, false)
 		if err != nil {

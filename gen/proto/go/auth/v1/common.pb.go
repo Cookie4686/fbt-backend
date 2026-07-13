@@ -167,34 +167,35 @@ func (x *User) GetPasswordEnabled() bool {
 	return false
 }
 
-type Passkey struct {
+type WebAuthnCredential struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	PasskeyId     string                 `protobuf:"bytes,1,opt,name=passkey_id,json=passkeyId,proto3" json:"passkey_id,omitempty"`
-	PublicKey     []byte                 `protobuf:"bytes,2,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
-	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	WebauthnId    string                 `protobuf:"bytes,4,opt,name=webauthn_id,json=webauthnId,proto3" json:"webauthn_id,omitempty"`
+	RpId          string                 `protobuf:"bytes,1,opt,name=rp_id,json=rpId,proto3" json:"rp_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	CredentialId  string                 `protobuf:"bytes,3,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
+	PublicKey     []byte                 `protobuf:"bytes,4,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
 	Counter       int64                  `protobuf:"varint,5,opt,name=counter,proto3" json:"counter,omitempty"`
-	DeviceType    string                 `protobuf:"bytes,6,opt,name=device_type,json=deviceType,proto3" json:"device_type,omitempty"`
-	BackedUp      bool                   `protobuf:"varint,7,opt,name=backed_up,json=backedUp,proto3" json:"backed_up,omitempty"`
+	Aaguid        []byte                 `protobuf:"bytes,6,opt,name=aaguid,proto3" json:"aaguid,omitempty"`
+	DeviceType    string                 `protobuf:"bytes,7,opt,name=device_type,json=deviceType,proto3" json:"device_type,omitempty"`
 	Transports    []string               `protobuf:"bytes,8,rep,name=transports,proto3" json:"transports,omitempty"`
+	BackedUp      bool                   `protobuf:"varint,9,opt,name=backed_up,json=backedUp,proto3" json:"backed_up,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Passkey) Reset() {
-	*x = Passkey{}
+func (x *WebAuthnCredential) Reset() {
+	*x = WebAuthnCredential{}
 	mi := &file_auth_v1_common_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Passkey) String() string {
+func (x *WebAuthnCredential) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Passkey) ProtoMessage() {}
+func (*WebAuthnCredential) ProtoMessage() {}
 
-func (x *Passkey) ProtoReflect() protoreflect.Message {
+func (x *WebAuthnCredential) ProtoReflect() protoreflect.Message {
 	mi := &file_auth_v1_common_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -206,65 +207,72 @@ func (x *Passkey) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Passkey.ProtoReflect.Descriptor instead.
-func (*Passkey) Descriptor() ([]byte, []int) {
+// Deprecated: Use WebAuthnCredential.ProtoReflect.Descriptor instead.
+func (*WebAuthnCredential) Descriptor() ([]byte, []int) {
 	return file_auth_v1_common_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *Passkey) GetPasskeyId() string {
+func (x *WebAuthnCredential) GetRpId() string {
 	if x != nil {
-		return x.PasskeyId
+		return x.RpId
 	}
 	return ""
 }
 
-func (x *Passkey) GetPublicKey() []byte {
-	if x != nil {
-		return x.PublicKey
-	}
-	return nil
-}
-
-func (x *Passkey) GetUserId() string {
+func (x *WebAuthnCredential) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
 	return ""
 }
 
-func (x *Passkey) GetWebauthnId() string {
+func (x *WebAuthnCredential) GetCredentialId() string {
 	if x != nil {
-		return x.WebauthnId
+		return x.CredentialId
 	}
 	return ""
 }
 
-func (x *Passkey) GetCounter() int64 {
+func (x *WebAuthnCredential) GetPublicKey() []byte {
+	if x != nil {
+		return x.PublicKey
+	}
+	return nil
+}
+
+func (x *WebAuthnCredential) GetCounter() int64 {
 	if x != nil {
 		return x.Counter
 	}
 	return 0
 }
 
-func (x *Passkey) GetDeviceType() string {
+func (x *WebAuthnCredential) GetAaguid() []byte {
+	if x != nil {
+		return x.Aaguid
+	}
+	return nil
+}
+
+func (x *WebAuthnCredential) GetDeviceType() string {
 	if x != nil {
 		return x.DeviceType
 	}
 	return ""
 }
 
-func (x *Passkey) GetBackedUp() bool {
-	if x != nil {
-		return x.BackedUp
-	}
-	return false
-}
-
-func (x *Passkey) GetTransports() []string {
+func (x *WebAuthnCredential) GetTransports() []string {
 	if x != nil {
 		return x.Transports
 	}
 	return nil
+}
+
+func (x *WebAuthnCredential) GetBackedUp() bool {
+	if x != nil {
+		return x.BackedUp
+	}
+	return false
 }
 
 var File_auth_v1_common_proto protoreflect.FileDescriptor
@@ -284,22 +292,21 @@ const file_auth_v1_common_proto_rawDesc = "" +
 	"\x05email\x18\x03 \x01(\tB\n" +
 	"\xbaH\a\xc8\x01\x01r\x02`\x01R\x05email\x12%\n" +
 	"\x0eemail_verified\x18\x04 \x01(\bR\remailVerified\x12)\n" +
-	"\x10password_enabled\x18\x05 \x01(\bR\x0fpasswordEnabled\"\xf9\x01\n" +
-	"\aPasskey\x12\x1d\n" +
+	"\x10password_enabled\x18\x05 \x01(\bR\x0fpasswordEnabled\"\x96\x02\n" +
+	"\x12WebAuthnCredential\x12\x13\n" +
+	"\x05rp_id\x18\x01 \x01(\tR\x04rpId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12#\n" +
+	"\rcredential_id\x18\x03 \x01(\tR\fcredentialId\x12\x1d\n" +
 	"\n" +
-	"passkey_id\x18\x01 \x01(\tR\tpasskeyId\x12\x1d\n" +
-	"\n" +
-	"public_key\x18\x02 \x01(\fR\tpublicKey\x12\x17\n" +
-	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x1f\n" +
-	"\vwebauthn_id\x18\x04 \x01(\tR\n" +
-	"webauthnId\x12\x18\n" +
-	"\acounter\x18\x05 \x01(\x03R\acounter\x12\x1f\n" +
-	"\vdevice_type\x18\x06 \x01(\tR\n" +
-	"deviceType\x12\x1b\n" +
-	"\tbacked_up\x18\a \x01(\bR\bbackedUp\x12\x1e\n" +
+	"public_key\x18\x04 \x01(\fR\tpublicKey\x12\x18\n" +
+	"\acounter\x18\x05 \x01(\x03R\acounter\x12\x16\n" +
+	"\x06aaguid\x18\x06 \x01(\fR\x06aaguid\x12\x1f\n" +
+	"\vdevice_type\x18\a \x01(\tR\n" +
+	"deviceType\x12\x1e\n" +
 	"\n" +
 	"transports\x18\b \x03(\tR\n" +
-	"transportsB\x80\x01\n" +
+	"transports\x12\x1b\n" +
+	"\tbacked_up\x18\t \x01(\bR\bbackedUpB\x80\x01\n" +
 	"\vcom.auth.v1B\vCommonProtoP\x01Z'fbt/backend/gen/proto/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\x06proto3"
 
 var (
@@ -318,7 +325,7 @@ var file_auth_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_auth_v1_common_proto_goTypes = []any{
 	(*Session)(nil),               // 0: auth.v1.Session
 	(*User)(nil),                  // 1: auth.v1.User
-	(*Passkey)(nil),               // 2: auth.v1.Passkey
+	(*WebAuthnCredential)(nil),    // 2: auth.v1.WebAuthnCredential
 	(*timestamppb.Timestamp)(nil), // 3: google.protobuf.Timestamp
 }
 var file_auth_v1_common_proto_depIdxs = []int32{

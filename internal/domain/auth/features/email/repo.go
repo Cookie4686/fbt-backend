@@ -3,6 +3,7 @@ package email
 import (
 	"context"
 	"fbt/backend/internal/domain/auth/model"
+	"fbt/backend/internal/util"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -29,7 +30,7 @@ func (s *repo) GetEmailVerification(ctx context.Context, userID string) (*model.
 		WHERE email_verification.user_id = @user_id
 	`
 	args := pgx.NamedArgs{"user_id": userID}
-	emailVerification, err := s.fetchEmailVerification(ctx, query, args)
+	emailVerification, err := util.FetchOne[model.EmailVerification](s.db, ctx, query, args)
 	if err != nil {
 		return nil, err
 	}
@@ -79,18 +80,4 @@ func (s *repo) DeleteEmailVerification(ctx context.Context, userID string) error
 	args := pgx.NamedArgs{"user_id": userID}
 	_, err := s.db.Exec(ctx, query, args)
 	return err
-}
-
-func (s *repo) fetchEmailVerification(ctx context.Context, query string, args ...any) (*model.EmailVerification, error) {
-	rows, err := s.db.Query(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	emailVerification, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[model.EmailVerification])
-	if err != nil {
-		return nil, err
-	}
-	return &emailVerification, nil
 }

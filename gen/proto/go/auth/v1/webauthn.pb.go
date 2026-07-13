@@ -24,7 +24,8 @@ const (
 
 type WebAuthnServiceGetUserPasskeyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	PasskeyId     string                 `protobuf:"bytes,1,opt,name=passkey_id,json=passkeyId,proto3" json:"passkey_id,omitempty"`
+	RpId          string                 `protobuf:"bytes,1,opt,name=rp_id,json=rpId,proto3" json:"rp_id,omitempty"`
+	CredentialId  string                 `protobuf:"bytes,2,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -59,16 +60,23 @@ func (*WebAuthnServiceGetUserPasskeyRequest) Descriptor() ([]byte, []int) {
 	return file_auth_v1_webauthn_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *WebAuthnServiceGetUserPasskeyRequest) GetPasskeyId() string {
+func (x *WebAuthnServiceGetUserPasskeyRequest) GetRpId() string {
 	if x != nil {
-		return x.PasskeyId
+		return x.RpId
+	}
+	return ""
+}
+
+func (x *WebAuthnServiceGetUserPasskeyRequest) GetCredentialId() string {
+	if x != nil {
+		return x.CredentialId
 	}
 	return ""
 }
 
 type WebAuthnServiceGetUserPasskeyResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Passkey       *Passkey               `protobuf:"bytes,1,opt,name=passkey,proto3" json:"passkey,omitempty"`
+	Credential    *WebAuthnCredential    `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -103,16 +111,16 @@ func (*WebAuthnServiceGetUserPasskeyResponse) Descriptor() ([]byte, []int) {
 	return file_auth_v1_webauthn_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *WebAuthnServiceGetUserPasskeyResponse) GetPasskey() *Passkey {
+func (x *WebAuthnServiceGetUserPasskeyResponse) GetCredential() *WebAuthnCredential {
 	if x != nil {
-		return x.Passkey
+		return x.Credential
 	}
 	return nil
 }
 
 type WebAuthnServiceCreateUserPasskeyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Passkey       *Passkey               `protobuf:"bytes,1,opt,name=passkey,proto3" json:"passkey,omitempty"`
+	Credential    *WebAuthnCredential    `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -147,16 +155,16 @@ func (*WebAuthnServiceCreateUserPasskeyRequest) Descriptor() ([]byte, []int) {
 	return file_auth_v1_webauthn_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *WebAuthnServiceCreateUserPasskeyRequest) GetPasskey() *Passkey {
+func (x *WebAuthnServiceCreateUserPasskeyRequest) GetCredential() *WebAuthnCredential {
 	if x != nil {
-		return x.Passkey
+		return x.Credential
 	}
 	return nil
 }
 
 type WebAuthnServiceCreateUserPasskeyResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Passkey       *Passkey               `protobuf:"bytes,1,opt,name=passkey,proto3" json:"passkey,omitempty"`
+	Credential    *WebAuthnCredential    `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -191,17 +199,18 @@ func (*WebAuthnServiceCreateUserPasskeyResponse) Descriptor() ([]byte, []int) {
 	return file_auth_v1_webauthn_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *WebAuthnServiceCreateUserPasskeyResponse) GetPasskey() *Passkey {
+func (x *WebAuthnServiceCreateUserPasskeyResponse) GetCredential() *WebAuthnCredential {
 	if x != nil {
-		return x.Passkey
+		return x.Credential
 	}
 	return nil
 }
 
 type WebAuthnServiceUpdatePasskeyCounterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	PasskeyId     string                 `protobuf:"bytes,1,opt,name=passkey_id,json=passkeyId,proto3" json:"passkey_id,omitempty"`
-	Counter       int64                  `protobuf:"varint,2,opt,name=counter,proto3" json:"counter,omitempty"`
+	RpId          string                 `protobuf:"bytes,1,opt,name=rp_id,json=rpId,proto3" json:"rp_id,omitempty"`
+	CredentialId  string                 `protobuf:"bytes,2,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
+	Counter       int64                  `protobuf:"varint,3,opt,name=counter,proto3" json:"counter,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -236,9 +245,16 @@ func (*WebAuthnServiceUpdatePasskeyCounterRequest) Descriptor() ([]byte, []int) 
 	return file_auth_v1_webauthn_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *WebAuthnServiceUpdatePasskeyCounterRequest) GetPasskeyId() string {
+func (x *WebAuthnServiceUpdatePasskeyCounterRequest) GetRpId() string {
 	if x != nil {
-		return x.PasskeyId
+		return x.RpId
+	}
+	return ""
+}
+
+func (x *WebAuthnServiceUpdatePasskeyCounterRequest) GetCredentialId() string {
+	if x != nil {
+		return x.CredentialId
 	}
 	return ""
 }
@@ -298,20 +314,26 @@ var File_auth_v1_webauthn_proto protoreflect.FileDescriptor
 
 const file_auth_v1_webauthn_proto_rawDesc = "" +
 	"\n" +
-	"\x16auth/v1/webauthn.proto\x12\aauth.v1\x1a\x14auth/v1/common.proto\x1a\x1bbuf/validate/validate.proto\"M\n" +
-	"$WebAuthnServiceGetUserPasskeyRequest\x12%\n" +
+	"\x16auth/v1/webauthn.proto\x12\aauth.v1\x1a\x14auth/v1/common.proto\x1a\x1bbuf/validate/validate.proto\"p\n" +
+	"$WebAuthnServiceGetUserPasskeyRequest\x12\x1b\n" +
+	"\x05rp_id\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04rpId\x12+\n" +
+	"\rcredential_id\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\fcredentialId\"l\n" +
+	"%WebAuthnServiceGetUserPasskeyResponse\x12C\n" +
 	"\n" +
-	"passkey_id\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tpasskeyId\"[\n" +
-	"%WebAuthnServiceGetUserPasskeyResponse\x122\n" +
-	"\apasskey\x18\x01 \x01(\v2\x10.auth.v1.PasskeyB\x06\xbaH\x03\xc8\x01\x01R\apasskey\"]\n" +
-	"'WebAuthnServiceCreateUserPasskeyRequest\x122\n" +
-	"\apasskey\x18\x01 \x01(\v2\x10.auth.v1.PasskeyB\x06\xbaH\x03\xc8\x01\x01R\apasskey\"^\n" +
-	"(WebAuthnServiceCreateUserPasskeyResponse\x122\n" +
-	"\apasskey\x18\x01 \x01(\v2\x10.auth.v1.PasskeyB\x06\xbaH\x03\xc8\x01\x01R\apasskey\"m\n" +
-	"*WebAuthnServiceUpdatePasskeyCounterRequest\x12%\n" +
+	"credential\x18\x01 \x01(\v2\x1b.auth.v1.WebAuthnCredentialB\x06\xbaH\x03\xc8\x01\x01R\n" +
+	"credential\"n\n" +
+	"'WebAuthnServiceCreateUserPasskeyRequest\x12C\n" +
 	"\n" +
-	"passkey_id\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tpasskeyId\x12\x18\n" +
-	"\acounter\x18\x02 \x01(\x03R\acounter\"a\n" +
+	"credential\x18\x01 \x01(\v2\x1b.auth.v1.WebAuthnCredentialB\x06\xbaH\x03\xc8\x01\x01R\n" +
+	"credential\"o\n" +
+	"(WebAuthnServiceCreateUserPasskeyResponse\x12C\n" +
+	"\n" +
+	"credential\x18\x01 \x01(\v2\x1b.auth.v1.WebAuthnCredentialB\x06\xbaH\x03\xc8\x01\x01R\n" +
+	"credential\"\x90\x01\n" +
+	"*WebAuthnServiceUpdatePasskeyCounterRequest\x12\x1b\n" +
+	"\x05rp_id\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04rpId\x12+\n" +
+	"\rcredential_id\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\fcredentialId\x12\x18\n" +
+	"\acounter\x18\x03 \x01(\x03R\acounter\"a\n" +
 	"+WebAuthnServiceUpdatePasskeyCounterResponse\x122\n" +
 	"\asession\x18\x01 \x01(\v2\x10.auth.v1.SessionB\x06\xbaH\x03\xc8\x01\x01R\asession2\x86\x03\n" +
 	"\x0fWebAuthnService\x12q\n" +
@@ -340,13 +362,13 @@ var file_auth_v1_webauthn_proto_goTypes = []any{
 	(*WebAuthnServiceCreateUserPasskeyResponse)(nil),    // 3: auth.v1.WebAuthnServiceCreateUserPasskeyResponse
 	(*WebAuthnServiceUpdatePasskeyCounterRequest)(nil),  // 4: auth.v1.WebAuthnServiceUpdatePasskeyCounterRequest
 	(*WebAuthnServiceUpdatePasskeyCounterResponse)(nil), // 5: auth.v1.WebAuthnServiceUpdatePasskeyCounterResponse
-	(*Passkey)(nil), // 6: auth.v1.Passkey
-	(*Session)(nil), // 7: auth.v1.Session
+	(*WebAuthnCredential)(nil),                          // 6: auth.v1.WebAuthnCredential
+	(*Session)(nil),                                     // 7: auth.v1.Session
 }
 var file_auth_v1_webauthn_proto_depIdxs = []int32{
-	6, // 0: auth.v1.WebAuthnServiceGetUserPasskeyResponse.passkey:type_name -> auth.v1.Passkey
-	6, // 1: auth.v1.WebAuthnServiceCreateUserPasskeyRequest.passkey:type_name -> auth.v1.Passkey
-	6, // 2: auth.v1.WebAuthnServiceCreateUserPasskeyResponse.passkey:type_name -> auth.v1.Passkey
+	6, // 0: auth.v1.WebAuthnServiceGetUserPasskeyResponse.credential:type_name -> auth.v1.WebAuthnCredential
+	6, // 1: auth.v1.WebAuthnServiceCreateUserPasskeyRequest.credential:type_name -> auth.v1.WebAuthnCredential
+	6, // 2: auth.v1.WebAuthnServiceCreateUserPasskeyResponse.credential:type_name -> auth.v1.WebAuthnCredential
 	7, // 3: auth.v1.WebAuthnServiceUpdatePasskeyCounterResponse.session:type_name -> auth.v1.Session
 	0, // 4: auth.v1.WebAuthnService.GetUserPasskey:input_type -> auth.v1.WebAuthnServiceGetUserPasskeyRequest
 	2, // 5: auth.v1.WebAuthnService.CreateUserPasskey:input_type -> auth.v1.WebAuthnServiceCreateUserPasskeyRequest

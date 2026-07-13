@@ -25,12 +25,12 @@ func (s *Server) GetUserPasskey(ctx context.Context, in *authv1.WebAuthnServiceG
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	passkey, err := s.repo.GetPasskey(ctx, in.PasskeyId)
+	credential, err := s.repo.GetPasskey(ctx, in.RpId, in.CredentialId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &authv1.WebAuthnServiceGetUserPasskeyResponse{Passkey: passkey.ToProto()}, nil
+	return &authv1.WebAuthnServiceGetUserPasskeyResponse{Credential: credential.ToProto()}, nil
 }
 
 func (s *Server) CreateUserPasskey(ctx context.Context, in *authv1.WebAuthnServiceCreateUserPasskeyRequest) (*authv1.WebAuthnServiceCreateUserPasskeyResponse, error) {
@@ -42,30 +42,31 @@ func (s *Server) CreateUserPasskey(ctx context.Context, in *authv1.WebAuthnServi
 		return nil, err
 	}
 
-	passkey := &model.Passkey{
-		PasskeyID:      in.Passkey.PasskeyId,
-		PublicKey:      in.Passkey.PublicKey,
-		UserID:         auth.Session.UserId,
-		WebauthnUserID: in.Passkey.WebauthnId,
-		Counter:        in.Passkey.Counter,
-		DeviceType:     in.Passkey.DeviceType,
-		BackedUp:       in.Passkey.BackedUp,
-		Transports:     in.Passkey.Transports,
+	credential := &model.WebAuthnCredential{
+		UserID:       auth.Session.UserId,
+		RpID:         in.Credential.RpId,
+		CredentialID: in.Credential.CredentialId,
+		PublicKey:    in.Credential.PublicKey,
+		Aaguid:       in.Credential.Aaguid,
+		Counter:      in.Credential.Counter,
+		DeviceType:   in.Credential.DeviceType,
+		Transports:   in.Credential.Transports,
+		BackupState:  in.Credential.BackedUp,
 	}
 
-	err = s.repo.CreatePasskey(ctx, passkey)
+	err = s.repo.CreatePasskey(ctx, credential)
 	if err != nil {
 		return nil, err
 	}
 
-	return &authv1.WebAuthnServiceCreateUserPasskeyResponse{Passkey: passkey.ToProto()}, nil
+	return &authv1.WebAuthnServiceCreateUserPasskeyResponse{Credential: credential.ToProto()}, nil
 }
 
 func (s *Server) UpdatePasskeyCounter(ctx context.Context, in *authv1.WebAuthnServiceUpdatePasskeyCounterRequest) (*authv1.WebAuthnServiceUpdatePasskeyCounterResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	passkey, err := s.repo.UpdatePasskeyCounter(ctx, in.PasskeyId, in.Counter)
+	passkey, err := s.repo.UpdatePasskeyCounter(ctx, in.RpId, in.CredentialId, in.Counter)
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/errors"
+	"fbt/backend/internal/util"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -35,7 +36,7 @@ func (s *repo) GetUserOAuth(ctx context.Context, provider string, idToken string
 		WHERE oauth_providers.name = @provider AND user_oauth.id_token = @id_token
 	`
 	args := pgx.NamedArgs{"provider": provider, "id_token": idToken}
-	userOAuth, err := s.fetchUserOAuth(ctx, query, args)
+	userOAuth, err := util.FetchOne[model.UserOAuth](s.db, ctx, query, args)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return userOAuth, errors.NotFound
@@ -107,7 +108,7 @@ func (s *repo) GetOAuthRegistration(ctx context.Context, registrationId string) 
 		ORDER BY expires_at DESC
 	`
 	args := pgx.NamedArgs{"registration_id": registrationId}
-	OAuthRegistration, err := s.fetchOAuthRegistration(ctx, query, args)
+	OAuthRegistration, err := util.FetchOne[model.OauthRegistration](s.db, ctx, query, args)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return OAuthRegistration, errors.NotFound
@@ -214,46 +215,4 @@ func (s *repo) GetUserProvider(ctx context.Context, userID string) ([]string, er
 	}
 
 	return providers, err
-}
-
-func (s *repo) fetchUserOAuths(ctx context.Context, query string, args ...any) ([]model.UserOAuth, error) {
-	rows, err := s.db.Query(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	userOAuths, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.UserOAuth])
-	if err != nil {
-		return nil, err
-	}
-	return userOAuths, nil
-}
-
-func (s *repo) fetchUserOAuth(ctx context.Context, query string, args ...any) (*model.UserOAuth, error) {
-	rows, err := s.db.Query(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	userOAuth, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[model.UserOAuth])
-	if err != nil {
-		return nil, err
-	}
-	return &userOAuth, nil
-}
-
-func (s *repo) fetchOAuthRegistration(ctx context.Context, query string, args ...any) (*model.OauthRegistration, error) {
-	rows, err := s.db.Query(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	OAuthRegistration, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[model.OauthRegistration])
-	if err != nil {
-		return nil, err
-	}
-	return &OAuthRegistration, nil
 }

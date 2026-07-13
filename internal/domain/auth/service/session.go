@@ -108,31 +108,3 @@ func (s *service) InvalidateSession(ctx context.Context, session *model.Session)
 	_, err := s.DB.Exec(ctx, query, args)
 	return err
 }
-
-func (s *service) fetchSessions(ctx context.Context, query string, args ...any) ([]model.Session, error) {
-	rows, err := s.DB.Query(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	sessions, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Session])
-	if err != nil {
-		return nil, err
-	}
-	return sessions, nil
-}
-
-func (s *service) fetchSession(ctx context.Context, query string, args ...any) (*model.Session, error) {
-	rows, err := s.DB.Query(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	session, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[model.Session])
-	if err != nil {
-		return nil, err
-	}
-	return &session, nil
-}
