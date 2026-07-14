@@ -17,10 +17,6 @@ env:
   PGUSER: postgres
   PGPASSWORD: password
 
-  GOOSE_DRIVER: postgres
-  GOOSE_DBSTRING: postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/$PGDATABASE
-  GOOSE_MIGRATION_DIR: ./sqlc/schema
-
   ENCRYPTION_KEY: randomkey
 
 jobs:
@@ -58,7 +54,7 @@ jobs:
           --health-retries 5
         ports:
           # Maps tcp port 5432 on service container to the host
-          - $PGPORT:5432
+          - "$PGPORT:5432"
 
     steps:
       - uses: actions/checkout@v7
@@ -76,6 +72,10 @@ jobs:
 
       - name: migrate database
         run: goose up
+        env:
+          GOOSE_DRIVER: postgres
+          GOOSE_DBSTRING: "postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/$PGDATABASE"
+          GOOSE_MIGRATION_DIR: ./sqlc/schema
 
       - name: Build
         run: go build -v ./...
