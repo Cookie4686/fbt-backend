@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/require"
@@ -24,7 +23,7 @@ func NewTestLocalAPI(t *testing.T) (ctx context.Context, baseURL string) {
 	d, err := util.NewDependency(ctx)
 	require.NoError(t, err)
 
-	ClearDatabase(t, ctx, d.DB)
+	ClearDatabase(t, ctx, d.CFG)
 
 	svr := server.NewServer(d)
 
@@ -33,8 +32,14 @@ func NewTestLocalAPI(t *testing.T) (ctx context.Context, baseURL string) {
 	return ctx, fmt.Sprintf("http://localhost:%d", d.CFG.API.PORT)
 }
 
-func ClearDatabase(t *testing.T, ctx context.Context, db *pgxpool.Pool) {
-	sqlDB, err := sql.Open("pgx", db.Config().ConnString())
+func ClearDatabase(t *testing.T, ctx context.Context, cfg *util.Config) {
+	sqlDB, err := sql.Open("pgx", fmt.Sprintf(
+		"postgres://%s:%s@localhost:%d/%s",
+		cfg.DB.PGUSER,
+		cfg.DB.PGPASSWORD,
+		cfg.DB.PGPORT,
+		cfg.DB.PGDATABASE,
+	))
 	require.NoError(t, err)
 
 	wd, err := os.Getwd()
