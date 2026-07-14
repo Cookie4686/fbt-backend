@@ -1,0 +1,98 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  ENV: test
+  PORT: 8080
+  PGPORT: 5432
+  PGDATABASE: fbt
+  PGUSER: postgres
+  PGPASSWORD: password
+
+  GOOSE_DRIVER: postgres
+  GOOSE_DBSTRING: postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/$PGDATABASE
+  GOOSE_MIGRATION_DIR: ./sqlc/schema
+
+  ENCRYPTION_KEY: randomkey
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.12
+
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        # Docker Hub image
+        image: postgres
+        env:
+          POSTGRES_DB: $PGDATABASE
+          POSTGRES_USER: $PGUSER
+          POSTGRES_PASSWORD: $PGPASSWORD
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - $PGPORT:5432
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
+      - name: Install dependencies
+        run: |
+          go get .
+          go install github.com/pressly/goose/v3/cmd/goose@latest
+          go install gotest.tools/gotestsum@latest
+
+      - name: migrate database
+        run: goose up
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test
+        run: |
+          gotestsum ./internal/... -cover -coverpkg=./internal/... -coverprofile=cover.out -p=1
+          go tool cover -func cover.out -o cover.txt
+          go tool cover -html cover.out -o cover.html
+        env:
+          cwd: ${{github.workspace}}
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: Test-Results
+          path: |
+            cover.out
+            cover.txt
+            cover.html
