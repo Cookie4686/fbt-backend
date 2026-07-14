@@ -17,7 +17,7 @@ env:
   PGDATABASE: postgres
   PGURL: postgres://postgres:password@localhost:5432/postgres
 
-  ENCRYPTION_KEY: _TBsWGoCTXFJHW2bBAdCHA==
+  ENCRYPTION_KEY: "+TBsWGoCTXFJHW2bBAdCHA=="
 
 jobs:
   lint:
