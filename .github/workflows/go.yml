@@ -13,7 +13,7 @@ env:
   ENV: test
   PORT: 8080
   PGPORT: 5432
-  PGDATABASE: fbt
+  PGDATABASE: postgres
   PGUSER: postgres
   PGPASSWORD: password
 
