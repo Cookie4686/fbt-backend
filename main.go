@@ -11,7 +11,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	d, err := util.NewDependency(ctx, ".env")
+	d, err := util.NewDependency(ctx)
 	if err != nil {
 		log.Fatalf("failed to create dependency: %v", err)
 	}
