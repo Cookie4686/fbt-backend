@@ -14,11 +14,10 @@ env:
   PORT: 8080
   PGUSER: postgres
   PGPASSWORD: password
-  PGPORT: 5432
   PGDATABASE: postgres
   PGURL: postgres://postgres:password@localhost:5432/postgres
 
-  ENCRYPTION_KEY: randomkey
+  ENCRYPTION_KEY: F0feZiZkvDextpZK4X7jZUCY
 
 jobs:
   lint:

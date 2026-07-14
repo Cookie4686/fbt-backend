@@ -6,9 +6,11 @@ import (
 	"encoding/base64"
 	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
+	"fbt/backend/internal/domain/auth/config"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/errors"
+	"fbt/backend/internal/interceptor"
 	"fbt/backend/internal/util"
 	"net/http"
 	"time"
@@ -17,6 +19,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/crypto/argon2"
 )
+
+const OAuthRegistrationMaxAge = 15 * time.Minute
 
 type Server struct {
 	service service.Service
@@ -56,14 +60,15 @@ func (s *Server) Register(ctx context.Context, in *authv1.OAuthServiceRegisterRe
 		PasswordEnabled: in.PasswordEnabled,
 	}
 	if in.PasswordEnabled {
-		salt := make([]byte, 16)
+		salt := make([]byte, config.PasswordSaltSize)
 		rand.Read(salt)
-		passwordHash := argon2.IDKey([]byte(in.Password), salt, 2, 19*1024, 1, 32)
+		passwordHash := argon2.IDKey([]byte(in.Password), salt, config.IdKeyTime, config.IdKeyMemory, config.IdKeyThread, config.IdKeyLen)
 		user.Password = pgtype.Text{String: base64.StdEncoding.EncodeToString(passwordHash), Valid: true}
 		user.PasswordSalt = pgtype.Text{String: base64.StdEncoding.EncodeToString(salt), Valid: true}
 	}
 
 	session := model.NewSession(user.Id, false)
+
 	err = s.repo.OAuthRegister(ctx, in.RegistrationId, user, session)
 	if err != nil {
 		return nil, err
@@ -78,7 +83,7 @@ func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest)
 		return nil, err
 	}
 
-	var userId string = ""
+	var userId = ""
 	if err == nil {
 		// Already Register OAuth
 		userId = userOAuth.UserID
@@ -91,6 +96,7 @@ func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest)
 			if err != nil {
 				return nil, err
 			}
+
 			userId = user.Id
 		} else if err != errors.NotFound {
 			return nil, err
@@ -102,6 +108,7 @@ func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest)
 		if err != nil {
 			return nil, err
 		}
+
 		return &authv1.OAuthServiceLoginResponse{
 			RegistrationNeeded: false,
 			Session:            session.ToProto(),
@@ -112,13 +119,14 @@ func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest)
 			RegistrationID: util.GenerateBase32UUID(),
 			IDToken:        in.Token,
 			EmailVerified:  in.EmailVerified,
-			ExpiresAt:      time.Now().Add(15 * time.Minute),
+			ExpiresAt:      time.Now().Add(OAuthRegistrationMaxAge),
 		}
 
 		err := s.repo.CreateOAuthRegistration(ctx, in.Provider, oauthRegistration)
 		if err != nil {
 			return nil, err
 		}
+
 		return &authv1.OAuthServiceLoginResponse{
 			RegistrationNeeded: true,
 			RegistrationId:     oauthRegistration.RegistrationID,
@@ -130,8 +138,10 @@ func (s *Server) Status(ctx context.Context, in *authv1.OAuthServiceStatusReques
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// TODO
-	auth := ctx.Value("auth").(*model.Auth)
+	auth, err := interceptor.FromAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	providers, err := s.repo.GetUserProvider(ctx, auth.User.Id)
 	if err != nil {
@@ -145,9 +155,12 @@ func (s *Server) Link(ctx context.Context, in *authv1.OAuthServiceLinkRequest) (
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth := ctx.Value("auth").(*model.Auth)
+	auth, err := interceptor.FromAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	err := s.repo.LinkOAuth(ctx, in.Provider, auth.User.Id, in.Token)
+	err = s.repo.LinkOAuth(ctx, in.Provider, auth.User.Id, in.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -156,6 +169,7 @@ func (s *Server) Link(ctx context.Context, in *authv1.OAuthServiceLinkRequest) (
 	if err != nil {
 		return nil, err
 	}
+
 	return &authv1.OAuthServiceLinkResponse{Session: session.ToProto()}, nil
 }
 
@@ -163,9 +177,12 @@ func (s *Server) Unlink(ctx context.Context, in *authv1.OAuthServiceUnlinkReques
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	auth := ctx.Value("auth").(*model.Auth)
+	auth, err := interceptor.FromAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	err := s.repo.UnLinkOAuth(ctx, in.Provider, auth.User.Id)
+	err = s.repo.UnLinkOAuth(ctx, in.Provider, auth.User.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -174,5 +191,6 @@ func (s *Server) Unlink(ctx context.Context, in *authv1.OAuthServiceUnlinkReques
 	if err != nil {
 		return nil, err
 	}
+
 	return &authv1.OAuthServiceUnlinkResponse{Session: session.ToProto()}, nil
 }

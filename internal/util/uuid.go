@@ -6,14 +6,19 @@ import (
 	"encoding/base64"
 )
 
+const base32BitEntropy = 15
+const base64BitEntropy = 18
+
 func GenerateBase32UUID() string {
-	bytes := make([]byte, 15)
+	bytes := make([]byte, base32BitEntropy)
 	rand.Read(bytes)
+
 	return base32.StdEncoding.EncodeToString(bytes)
 }
 
 func GenerateBase64UUID() string {
-	bytes := make([]byte, 18)
+	bytes := make([]byte, base64BitEntropy)
 	rand.Read(bytes)
+
 	return base64.StdEncoding.EncodeToString(bytes)
 }

@@ -117,5 +117,6 @@ func protoToModel(accs []*bookkeepingv1.Account) []model.Account {
 			UserId:  a.UserId,
 		}
 	}
+
 	return accounts
 }

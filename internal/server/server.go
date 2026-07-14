@@ -8,9 +8,12 @@ import (
 	"fbt/backend/internal/util"
 	"fmt"
 	"net/http"
+	"time"
 
 	"connectrpc.com/connect"
 )
+
+const readHeaderTimeout = 2 * time.Second
 
 func NewServer(d *util.Dependency) *http.Server {
 	mux := http.NewServeMux()
@@ -35,9 +38,10 @@ func NewServer(d *util.Dependency) *http.Server {
 	p.SetUnencryptedHTTP2(true)
 
 	server := http.Server{
-		Addr:      fmt.Sprintf(":%d", d.CFG.API.PORT),
-		Handler:   mux,
-		Protocols: p,
+		Addr:              fmt.Sprintf(":%d", d.CFG.API.PORT),
+		Handler:           mux,
+		Protocols:         p,
+		ReadHeaderTimeout: readHeaderTimeout,
 	}
 
 	return &server

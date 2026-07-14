@@ -30,6 +30,7 @@ func (s *repo) GetEmailVerification(ctx context.Context, userID string) (*model.
 		WHERE email_verification.user_id = @user_id
 	`
 	args := pgx.NamedArgs{"user_id": userID}
+
 	emailVerification, err := util.FetchOne[model.EmailVerification](s.db, ctx, query, args)
 	if err != nil {
 		return nil, err
@@ -50,6 +51,7 @@ func (s *repo) CreateEmailVerification(ctx context.Context, email *model.EmailVe
 		"expires_at":      email.ExpiresAt,
 	}
 	_, err := s.db.Exec(ctx, query, args)
+
 	return err
 }
 
@@ -69,6 +71,7 @@ func (s *repo) VerifyEmail(ctx context.Context, userID string) error {
 	)
 
 	_, err := s.db.SendBatch(ctx, batch).Exec()
+
 	return err
 }
 
@@ -79,5 +82,6 @@ func (s *repo) DeleteEmailVerification(ctx context.Context, userID string) error
 	`
 	args := pgx.NamedArgs{"user_id": userID}
 	_, err := s.db.Exec(ctx, query, args)
+
 	return err
 }

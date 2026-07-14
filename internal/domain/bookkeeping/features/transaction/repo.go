@@ -49,6 +49,7 @@ func (s repo) GetAll(ctx context.Context, userID string) (*[]model.TransactionEn
 	defer rows.Close()
 
 	var te []model.TransactionEntry
+
 	for rows.Next() {
 		var i GetAllRow
 		if err := rows.Scan(
@@ -85,6 +86,7 @@ func (s repo) GetAll(ctx context.Context, userID string) (*[]model.TransactionEn
 
 func (s repo) Create(ctx context.Context, te *model.TransactionEntry) (transactionID int64, err error) {
 	log.Print(te.Datetime)
+
 	query := `
 		INSERT INTO transactions(datetime)
 		VALUES (@datetime)
@@ -122,7 +124,6 @@ func (s *repo) Update(ctx context.Context, te *model.TransactionEntry) error {
 	)
 
 	_, err := s.db.SendBatch(ctx, batch).Exec()
-
 	if err != nil {
 		return err
 	}
@@ -131,6 +132,7 @@ func (s *repo) Update(ctx context.Context, te *model.TransactionEntry) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -142,6 +144,7 @@ func (s *repo) Delete(ctx context.Context, userID string, transactionID int64) e
 	args := pgx.NamedArgs{"transaction_id": transactionID}
 
 	_, err := s.db.Exec(ctx, query, args)
+
 	return err
 }
 

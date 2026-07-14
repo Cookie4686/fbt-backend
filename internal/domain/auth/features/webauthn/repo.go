@@ -30,10 +30,12 @@ func (s *repo) GetPasskey(ctx context.Context, rpID string, credentialID string)
 		AND credential_id = @credential_id
 	`
 	args := pgx.StrictNamedArgs{"rp_id": rpID, "credential_id": credentialID}
+
 	credential, err := util.FetchOne[model.WebAuthnCredential](s.db, ctx, query, args)
 	if err != nil {
 		return nil, err
 	}
+
 	return credential, nil
 }
 
@@ -54,6 +56,7 @@ func (s *repo) CreatePasskey(ctx context.Context, credential *model.WebAuthnCred
 		"backup_state":  credential.BackupState,
 	}
 	_, err := s.db.Exec(ctx, query, args)
+
 	return err
 }
 
@@ -66,9 +69,11 @@ func (s *repo) UpdatePasskeyCounter(ctx context.Context, rpID string, credential
 		RETURNING *
 	`
 	args := pgx.NamedArgs{"rp_id": rpID, "credential_id": credentialID, "counter": counter}
+
 	passkey, err := util.FetchOne[model.WebAuthnCredential](s.db, ctx, query, args)
 	if err != nil {
 		return nil, err
 	}
+
 	return passkey, nil
 }

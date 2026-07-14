@@ -5,7 +5,7 @@ type MfaList struct {
 }
 
 type MfaTotp struct {
-	ID     int32  `json:"id" db:"id"`
-	Key    string `json:"key" db:"key"`
-	UserID string `json:"user_id" db:"user_id"`
+	ID     int32  `db:"id"      json:"id"`
+	Key    string `db:"key"     json:"key"`
+	UserID string `db:"user_id" json:"user_id"`
 }

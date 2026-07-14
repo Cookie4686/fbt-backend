@@ -14,15 +14,19 @@ func Decrypt(encryptedValue string, encryptionKey string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	value, err := base64.StdEncoding.DecodeString(encryptedValue)
 	if err != nil {
 		return nil, err
 	}
+
 	ciphertext, err := decryptGCM(value, key)
 	if err != nil {
 		return nil, err
 	}
+
 	decryptedValue := string(ciphertext)
+
 	return &decryptedValue, nil
 }
 
@@ -31,11 +35,14 @@ func Encrypt(value string, encryptionKey string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	ciphertext, err := encryptGCM([]byte(value), key)
 	if err != nil {
 		return nil, err
 	}
+
 	encryptedValue := base64.StdEncoding.EncodeToString(ciphertext)
+
 	return &encryptedValue, nil
 }
 
@@ -75,5 +82,6 @@ func decryptGCM(ciphertext, key []byte) ([]byte, error) {
 	}
 
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
+
 	return gcm.Open(nil, nonce, ciphertext, nil)
 }

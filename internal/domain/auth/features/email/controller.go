@@ -16,6 +16,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const otpDigits = 6
+
 type Server struct {
 	service service.Service
 	repo    Repo
@@ -34,12 +36,13 @@ func (s *Server) SendOTP(ctx context.Context, in *authv1.EmailServiceSendOTPRequ
 		return nil, err
 	}
 
-	otp, err := util.GenerateOTP(6)
+	otp, err := util.GenerateOTP(otpDigits)
 	if err != nil {
 		return nil, err
 	}
 
 	verificationId := util.GenerateBase32UUID()
+
 	if err := s.service.SendVerificationMail(in.Email, otp); err != nil {
 		return nil, err
 	}
@@ -75,6 +78,7 @@ func (s *Server) Verify(ctx context.Context, in *authv1.EmailServiceVerifyReques
 		if err := s.repo.DeleteEmailVerification(ctx, auth.Session.UserId); err != nil {
 			return nil, errors.DBError
 		}
+
 		return nil, errors.SessionExpire
 	}
 
@@ -91,5 +95,6 @@ func (s *Server) Verify(ctx context.Context, in *authv1.EmailServiceVerifyReques
 	if err != nil {
 		return nil, err
 	}
+
 	return &authv1.EmailServiceVerifyResponse{Session: session.ToProto()}, nil
 }

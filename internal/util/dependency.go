@@ -39,7 +39,6 @@ func NewLogger(cfg *Config) (logger *zap.Logger, err error) {
 
 func NewDatabasePool(ctx context.Context, cfg *Config) (*pgxpool.Pool, error) {
 	dbConfig, err := pgxpool.ParseConfig(cfg.PGURL)
-
 	if err != nil {
 		return nil, err
 	}

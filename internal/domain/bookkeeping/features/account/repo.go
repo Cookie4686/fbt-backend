@@ -49,6 +49,7 @@ func (s repo) Create(ctx context.Context, account *model.Account) (accountID int
 	}
 
 	err = s.db.QueryRow(ctx, query, args).Scan(&accountID)
+
 	return
 }
 
@@ -67,6 +68,7 @@ func (s *repo) Update(ctx context.Context, account *model.Account) error {
 	}
 
 	_, err := s.db.Exec(ctx, query, args)
+
 	return err
 }
 
@@ -81,5 +83,6 @@ func (s *repo) Delete(ctx context.Context, userID string, accountID int32) error
 	}
 
 	_, err := s.db.Exec(ctx, query, args)
+
 	return err
 }

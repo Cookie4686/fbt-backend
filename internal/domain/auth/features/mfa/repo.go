@@ -36,6 +36,7 @@ func (s *repo) GetMFAList(ctx context.Context, userID string) (*model.MfaList, e
 	var list struct {
 		TotpID *string
 	}
+
 	err := row.Scan(&list.TotpID)
 	if err != nil {
 		return nil, err
@@ -52,13 +53,16 @@ func (s *repo) GetTOTP(ctx context.Context, userID string) (*model.MfaTotp, erro
 		WHERE user_id = @user_id
 	`
 	args := pgx.NamedArgs{"user_id": userID}
+
 	totp, err := util.FetchOne[model.MfaTotp](s.db, ctx, query, args)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, errors.NotFound
 		}
+
 		return nil, err
 	}
+
 	return totp, nil
 }
 
@@ -72,5 +76,6 @@ func (s *repo) UpsertTOTP(ctx context.Context, key string, userID string) error 
 	`
 	args := pgx.NamedArgs{"key": key, "user_id": userID}
 	_, err := s.db.Exec(ctx, query, args)
+
 	return err
 }

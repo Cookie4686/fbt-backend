@@ -36,13 +36,16 @@ func (s *repo) GetUserOAuth(ctx context.Context, provider string, idToken string
 		WHERE oauth_providers.name = @provider AND user_oauth.id_token = @id_token
 	`
 	args := pgx.NamedArgs{"provider": provider, "id_token": idToken}
+
 	userOAuth, err := util.FetchOne[model.UserOAuth](s.db, ctx, query, args)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return userOAuth, errors.NotFound
 		}
+
 		return nil, err
 	}
+
 	return userOAuth, err
 }
 
@@ -60,6 +63,7 @@ func (s *repo) LinkOAuth(ctx context.Context, provider string, userID string, id
 	`
 	args := pgx.NamedArgs{"user_id": userID, "provider": provider, "id_token": idToken}
 	_, err := s.db.Exec(ctx, query, args)
+
 	return err
 }
 
@@ -73,6 +77,7 @@ func (s *repo) UnLinkOAuth(ctx context.Context, provider string, userID string) 
 	`
 	args := pgx.NamedArgs{"user_id": userID, "provider": provider}
 	_, err := s.db.Exec(ctx, query, args)
+
 	return err
 }
 
@@ -98,6 +103,7 @@ func (s *repo) CreateOAuthRegistration(ctx context.Context, provider string, oau
 		"expires_at":      oauthRegistration.ExpiresAt,
 	}
 	_, err := s.db.Exec(ctx, query, args)
+
 	return err
 }
 
@@ -108,13 +114,16 @@ func (s *repo) GetOAuthRegistration(ctx context.Context, registrationId string) 
 		ORDER BY expires_at DESC
 	`
 	args := pgx.NamedArgs{"registration_id": registrationId}
+
 	OAuthRegistration, err := util.FetchOne[model.OauthRegistration](s.db, ctx, query, args)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return OAuthRegistration, errors.NotFound
 		}
+
 		return nil, err
 	}
+
 	return OAuthRegistration, nil
 }
 
@@ -130,6 +139,7 @@ func (s *repo) DeleteOAuthRegistration(ctx context.Context, provider string, idT
 	`
 	args := pgx.NamedArgs{"provider": provider, "registration_id": idToken}
 	_, err := s.db.Exec(ctx, query, args)
+
 	return err
 }
 
@@ -189,6 +199,7 @@ func (s *repo) OAuthRegister(ctx context.Context, registrationId string, user *m
 
 	br := s.db.SendBatch(ctx, batch)
 	_, err := br.Exec()
+
 	return err
 }
 
@@ -199,18 +210,22 @@ func (s *repo) GetUserProvider(ctx context.Context, userID string) ([]string, er
 		WHERE user_oauth.user_id = @user_id
 	`
 	args := pgx.NamedArgs{"user_id": userID}
+
 	rows, err := s.db.Query(ctx, query, args)
 	if err != nil {
 		return nil, err
 	}
 
-	var providers []string = make([]string, 0)
-	for rows.Next() != false {
+	var providers = make([]string, 0)
+
+	for rows.Next() {
 		var provider string
+
 		err := rows.Scan(&provider)
 		if err != nil {
 			return nil, err
 		}
+
 		providers = append(providers, provider)
 	}
 

@@ -4,9 +4,7 @@ import (
 	"fbt/backend/internal/util"
 )
 
-type Service interface {
-}
-
+type Service any
 type service struct {
 	*util.Dependency
 }

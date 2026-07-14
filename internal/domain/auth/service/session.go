@@ -9,6 +9,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+const sessionRenewInterval = model.SessionExpiresIn / 2
+
 // SECURITY: Do we need to hash session id?
 
 func (s *service) CreateSession(ctx context.Context, userId string, twoFactorVerified bool) (*model.Session, error) {
@@ -29,6 +31,7 @@ func (s *service) CreateSession(ctx context.Context, userId string, twoFactorVer
 	if _, err := s.DB.Exec(ctx, query, args); err != nil {
 		return nil, err
 	}
+
 	return session, nil
 }
 
@@ -43,6 +46,7 @@ func (s *service) Validate(ctx context.Context, sessionId string) (*model.Auth, 
 	row := s.DB.QueryRow(ctx, query, args)
 
 	var auth model.Auth
+
 	err := row.Scan(
 		&auth.Session.Id,
 		&auth.Session.UserId,
@@ -60,6 +64,7 @@ func (s *service) Validate(ctx context.Context, sessionId string) (*model.Auth, 
 	if err == pgx.ErrNoRows {
 		return nil, errors.NotFound
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -68,9 +73,11 @@ func (s *service) Validate(ctx context.Context, sessionId string) (*model.Auth, 
 		if err := s.InvalidateSession(ctx, &auth.Session); err != nil {
 			return nil, errors.DBError
 		}
+
 		return nil, errors.SessionExpire
 	}
-	if time.Now().After(auth.Session.ExpiresAt.Add(-model.SessionExpiresIn / 2)) {
+
+	if time.Now().After(auth.Session.ExpiresAt.Add(-sessionRenewInterval)) {
 		newExpiresAt := time.Now().Add(model.SessionExpiresIn)
 		maxExpiresAt := auth.Session.CreatedAt.Add(model.SessionMaxAge)
 
@@ -96,6 +103,7 @@ func (s *service) UpdateSessionExpiration(ctx context.Context, session *model.Se
 	`
 	args := pgx.NamedArgs{"expiresAt": session.ExpiresAt, "sessionId": session.Id}
 	_, err := s.DB.Exec(ctx, query, args)
+
 	return err
 }
 
@@ -106,5 +114,6 @@ func (s *service) InvalidateSession(ctx context.Context, session *model.Session)
 	`
 	args := pgx.NamedArgs{"sessionId": session.Id}
 	_, err := s.DB.Exec(ctx, query, args)
+
 	return err
 }

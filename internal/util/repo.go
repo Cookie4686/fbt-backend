@@ -18,6 +18,7 @@ func FetchOne[T any](db *pgxpool.Pool, ctx context.Context, query string, args .
 	if err != nil {
 		return nil, err
 	}
+
 	return &model, nil
 }
 
@@ -32,5 +33,6 @@ func FetchMany[T any](db *pgxpool.Pool, ctx context.Context, query string, args 
 	if err != nil {
 		return nil, err
 	}
+
 	return &models, nil
 }

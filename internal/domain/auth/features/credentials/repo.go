@@ -50,5 +50,6 @@ func (s repo) Register(ctx context.Context, user *model.User, session *model.Ses
 	)
 
 	_, err := s.db.SendBatch(ctx, batch).Exec()
+
 	return err
 }

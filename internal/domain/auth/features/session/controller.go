@@ -48,5 +48,6 @@ func (s *Server) Logout(ctx context.Context, in *authv1.SessionServiceLogoutRequ
 	if err != nil {
 		return nil, err
 	}
+
 	return nil, nil
 }

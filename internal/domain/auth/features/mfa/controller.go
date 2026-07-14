@@ -35,6 +35,7 @@ func (s *Server) Status(ctx context.Context, in *authv1.MFAServiceStatusRequest)
 	if err != nil {
 		return nil, err
 	}
+
 	return &authv1.MFAServiceStatusResponse{TotpEnabled: userMfaList.Totp}, nil
 }
 
@@ -84,6 +85,7 @@ func (s *Server) TOTPUpsertKey(ctx context.Context, in *authv1.MFAServiceTOTPUps
 	if err != nil {
 		return nil, err
 	}
+
 	err = s.repo.UpsertTOTP(ctx, *encryptedKey, auth.User.Id)
 	if err != nil {
 		return nil, err
@@ -93,6 +95,7 @@ func (s *Server) TOTPUpsertKey(ctx context.Context, in *authv1.MFAServiceTOTPUps
 	if err != nil {
 		return nil, err
 	}
+
 	err = s.service.InvalidateSession(ctx, &auth.Session)
 	if err != nil {
 		return nil, err

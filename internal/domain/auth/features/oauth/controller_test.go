@@ -36,6 +36,7 @@ func TestOAuth(t *testing.T) {
 	})
 
 	var session *authv1.Session
+
 	t.Run("Register", func(t *testing.T) {
 		res, err := client.Register(t.Context(), &authv1.OAuthServiceRegisterRequest{
 			Username:        "test",

@@ -62,6 +62,7 @@ func (s *interceptorProvider) Logging() connect.UnaryInterceptorFunc {
 			}
 
 			s.Logger.Info(req.Spec().Procedure)
+
 			return res, nil
 		}
 	}

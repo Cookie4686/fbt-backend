@@ -64,6 +64,7 @@ func (c *Server) Create(ctx context.Context, in *bookkeepingv1.AccountServiceCre
 	}
 
 	account.ID = accountID
+
 	return &bookkeepingv1.AccountServiceCreateResponse{Account: account.ToProto()}, nil
 }
 

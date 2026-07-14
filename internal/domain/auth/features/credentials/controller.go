@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
+	"fbt/backend/internal/domain/auth/config"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/errors"
@@ -28,9 +29,9 @@ func NewServiceHandler(service service.Service, repo Repo, opts ...connect.Handl
 }
 
 func (s *con) Register(ctx context.Context, req *authv1.CredentialServiceRegisterRequest) (*authv1.CredentialServiceRegisterResponse, error) {
-	salt := make([]byte, 16)
+	salt := make([]byte, config.PasswordSaltSize)
 	rand.Read(salt)
-	passwordHash := argon2.IDKey([]byte(req.Password), salt, 2, 19*1024, 1, 32)
+	passwordHash := argon2.IDKey([]byte(req.Password), salt, config.IdKeyTime, config.IdKeyMemory, config.IdKeyThread, config.IdKeyLen)
 
 	user := &model.User{
 		Id:              util.GenerateBase32UUID(),
@@ -42,6 +43,7 @@ func (s *con) Register(ctx context.Context, req *authv1.CredentialServiceRegiste
 		PasswordEnabled: true,
 	}
 	session := model.NewSession(user.Id, false)
+
 	err := s.repo.Register(ctx, user, session)
 	if err != nil {
 		return nil, err
@@ -61,19 +63,21 @@ func (s *con) Login(ctx context.Context, req *authv1.CredentialServiceLoginReque
 	if err != nil {
 		return nil, err
 	}
+
 	storedSalt, err := base64.StdEncoding.DecodeString(user.PasswordSalt.String)
 	if err != nil {
 		return nil, err
 	}
 
 	// Compare Password Hash
-	passwordHash := argon2.IDKey([]byte(req.Password), storedSalt, 2, 19*1024, 1, 32)
+	passwordHash := argon2.IDKey([]byte(req.Password), storedSalt, config.IdKeyTime, config.IdKeyMemory, config.IdKeyThread, config.IdKeyLen)
 	if subtle.ConstantTimeCompare(passwordHash, storedHash) == 1 && user.PasswordEnabled {
 		// Create Session in Database
 		session, err := s.service.CreateSession(ctx, user.Id, false)
 		if err != nil {
 			return nil, err
 		}
+
 		return &authv1.CredentialServiceLoginResponse{Session: session.ToProto()}, nil
 	} else {
 		return nil, errors.Unauthorized
