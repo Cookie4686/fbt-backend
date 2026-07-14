@@ -1,5 +1,4 @@
 [![wakatime](https://wakatime.com/badge/github/Cookie4686/fbt-backend.svg)](https://wakatime.com/badge/github/Cookie4686/fbt-backend)
-
 [![Build Status](https://github.com/Cookie4686/fbt-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/Cookie4686/fbt-backend/actions/workflows/ci.yml)
 
 # About this project
