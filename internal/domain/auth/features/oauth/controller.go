@@ -102,18 +102,20 @@ func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest)
 			return nil, err
 		}
 
-		// Link OAuth to existing email
-		session := model.NewSession(user.Id, false)
+		if err != errors.NotFound {
+			// Link OAuth to existing email
+			session := model.NewSession(user.Id, false)
 
-		err = s.repo.LinkOAuth(ctx, in.Provider, user.Id, in.Token, session)
-		if err != nil {
-			return nil, err
+			err = s.repo.LinkOAuth(ctx, in.Provider, user.Id, in.Token, session)
+			if err != nil {
+				return nil, err
+			}
+
+			return &authv1.OAuthServiceLoginResponse{
+				RegistrationNeeded: false,
+				Session:            session.ToProto(),
+			}, nil
 		}
-
-		return &authv1.OAuthServiceLoginResponse{
-			RegistrationNeeded: false,
-			Session:            session.ToProto(),
-		}, nil
 	}
 
 	// No OAuth and No Email Registration

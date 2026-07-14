@@ -30,7 +30,7 @@ func NewDependency(ctx context.Context) (*Dependency, error) {
 }
 
 func NewLogger(cfg *Config) (logger *zap.Logger, err error) {
-	if cfg.ENV == "" || cfg.ENV == "development" {
+	if cfg.ENV == "" || cfg.ENV == "development" || cfg.ENV == "test" {
 		return zap.NewDevelopment()
 	} else {
 		return zap.NewProduction()

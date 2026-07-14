@@ -21,3 +21,8 @@ linters:
     # - varnamelen
     - wastedassign
     - wsl_v5
+
+  settings:
+    cyclop:
+      # The maximal code complexity to report. (Default: 10)
+      max-complexity: 12

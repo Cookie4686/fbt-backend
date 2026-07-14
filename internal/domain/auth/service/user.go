@@ -38,5 +38,5 @@ func (s *service) GetUserByEmail(ctx context.Context, email string) (*model.User
 		return nil, err
 	}
 
-	return user, err
+	return user, nil
 }
