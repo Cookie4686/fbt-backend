@@ -2,7 +2,6 @@ package util
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/wneessen/go-mail"
@@ -39,10 +38,8 @@ func NewLogger(cfg *Config) (logger *zap.Logger, err error) {
 }
 
 func NewDatabasePool(ctx context.Context, cfg *Config) (*pgxpool.Pool, error) {
-	dbConfig, err := pgxpool.ParseConfig(fmt.Sprintf(
-		"user=%v password=%v port=%v dbname=%v",
-		cfg.DB.PGUSER, cfg.DB.PGPASSWORD, cfg.DB.PGPORT, cfg.DB.PGDATABASE),
-	)
+	dbConfig, err := pgxpool.ParseConfig(cfg.PGURL)
+
 	if err != nil {
 		return nil, err
 	}

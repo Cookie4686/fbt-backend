@@ -23,7 +23,7 @@ func NewTestLocalAPI(t *testing.T) (ctx context.Context, baseURL string) {
 	d, err := util.NewDependency(ctx)
 	require.NoError(t, err)
 
-	ClearDatabase(t, ctx, d.CFG)
+	ClearDatabase(t, ctx, d.CFG.PGURL)
 
 	svr := server.NewServer(d)
 
@@ -32,14 +32,8 @@ func NewTestLocalAPI(t *testing.T) (ctx context.Context, baseURL string) {
 	return ctx, fmt.Sprintf("http://localhost:%d", d.CFG.API.PORT)
 }
 
-func ClearDatabase(t *testing.T, ctx context.Context, cfg *util.Config) {
-	sqlDB, err := sql.Open("pgx", fmt.Sprintf(
-		"postgres://%s:%s@localhost:%d/%s",
-		cfg.DB.PGUSER,
-		cfg.DB.PGPASSWORD,
-		cfg.DB.PGPORT,
-		cfg.DB.PGDATABASE,
-	))
+func ClearDatabase(t *testing.T, ctx context.Context, pgurl string) {
+	sqlDB, err := sql.Open("pgx", pgurl)
 	require.NoError(t, err)
 
 	wd, err := os.Getwd()

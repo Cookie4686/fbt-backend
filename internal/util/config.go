@@ -14,7 +14,8 @@ type Config struct {
 	API struct {
 		PORT int `env:"PORT"`
 	}
-	DB struct {
+	PGURL string `env:"PGURL"`
+	DB    struct {
 		PGPORT     int    `env:"PGPORT"`
 		PGDATABASE string `env:"PGDATABASE"`
 		PGUSER     string `env:"PGUSER"`
@@ -42,7 +43,9 @@ func NewConfig() (*Config, error) {
 
 	if err := godotenv.Load(fmt.Sprintf(".env.%s", environment)); err != nil {
 		if err := godotenv.Load(".env"); err != nil {
-			godotenv.Load(".env.example")
+			if err := godotenv.Load(".env.example"); err != nil {
+				return nil, err
+			}
 		}
 	}
 
