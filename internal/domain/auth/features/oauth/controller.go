@@ -83,28 +83,9 @@ func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest)
 		return nil, err
 	}
 
-	var userId = ""
 	if err == nil {
 		// Already Register OAuth
-		userId = userOAuth.UserID
-	} else if in.Email != nil {
-		user, err := s.service.GetUserByEmail(ctx, *in.Email)
-		if err == nil {
-			// Link OAuth to existing email
-			// TODO: merge Link and Create Session Together
-			err := s.repo.LinkOAuth(ctx, in.Provider, user.Id, in.Token)
-			if err != nil {
-				return nil, err
-			}
-
-			userId = user.Id
-		} else if err != errors.NotFound {
-			return nil, err
-		}
-	}
-
-	if userId != "" {
-		session, err := s.service.CreateSession(ctx, userId, false)
+		session, err := s.service.CreateSession(ctx, userOAuth.UserID, false)
 		if err != nil {
 			return nil, err
 		}
@@ -113,25 +94,45 @@ func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest)
 			RegistrationNeeded: false,
 			Session:            session.ToProto(),
 		}, nil
-	} else {
-		// No OAuth and No Email Registration
-		oauthRegistration := &model.OauthRegistration{
-			RegistrationID: util.GenerateBase32UUID(),
-			IDToken:        in.Token,
-			EmailVerified:  in.EmailVerified,
-			ExpiresAt:      time.Now().Add(OAuthRegistrationMaxAge),
+	}
+
+	if in.Email != nil {
+		user, err := s.service.GetUserByEmail(ctx, *in.Email)
+		if err != nil && err != errors.NotFound {
+			return nil, err
 		}
 
-		err := s.repo.CreateOAuthRegistration(ctx, in.Provider, oauthRegistration)
+		// Link OAuth to existing email
+		session := model.NewSession(user.Id, false)
+
+		err = s.repo.LinkOAuth(ctx, in.Provider, user.Id, in.Token, session)
 		if err != nil {
 			return nil, err
 		}
 
 		return &authv1.OAuthServiceLoginResponse{
-			RegistrationNeeded: true,
-			RegistrationId:     oauthRegistration.RegistrationID,
+			RegistrationNeeded: false,
+			Session:            session.ToProto(),
 		}, nil
 	}
+
+	// No OAuth and No Email Registration
+	oauthRegistration := &model.OauthRegistration{
+		RegistrationID: util.GenerateBase32UUID(),
+		IDToken:        in.Token,
+		EmailVerified:  in.EmailVerified,
+		ExpiresAt:      time.Now().Add(OAuthRegistrationMaxAge),
+	}
+
+	err = s.repo.CreateOAuthRegistration(ctx, in.Provider, oauthRegistration)
+	if err != nil {
+		return nil, err
+	}
+
+	return &authv1.OAuthServiceLoginResponse{
+		RegistrationNeeded: true,
+		RegistrationId:     oauthRegistration.RegistrationID,
+	}, nil
 }
 
 func (s *Server) Status(ctx context.Context, in *authv1.OAuthServiceStatusRequest) (*authv1.OAuthServiceStatusResponse, error) {
@@ -160,12 +161,9 @@ func (s *Server) Link(ctx context.Context, in *authv1.OAuthServiceLinkRequest) (
 		return nil, err
 	}
 
-	err = s.repo.LinkOAuth(ctx, in.Provider, auth.User.Id, in.Token)
-	if err != nil {
-		return nil, err
-	}
+	session := model.NewSession(auth.Session.UserId, true)
 
-	session, err := s.service.CreateSession(ctx, auth.User.Id, true)
+	err = s.repo.LinkOAuth(ctx, in.Provider, auth.User.Id, in.Token, session)
 	if err != nil {
 		return nil, err
 	}

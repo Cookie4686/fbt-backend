@@ -1,41 +1,23 @@
 version: "2"
 linters:
-    default: standard
-    enable:
-        - asciicheck
-        - bidichk
-        - containedctx
-        - contextcheck
-        - copyloopvar
-        - cyclop
-        - dogsled
-        - dupl
-        - dupword
-        - embeddedstructfieldcheck
-        - gochecknoinits
-        - gosec
-        - mnd
-        - modernize
-        - tagalign
-        - usestdlibvars
-        # - varnamelen
-        - wastedassign
-        - wsl_v5
-    option: value
-formatters:
-    # See the dedicated "formatters" documentation section.
-    option: value
-issues:
-    # See the dedicated "issues" documentation section.
-    option: value
-# Output configuration options.
-output:
-    # See the dedicated "output" documentation section.
-    option: value
-# Options for analysis running.
-run:
-    # See the dedicated "run" documentation section.
-    option: value
-severity:
-    # See the dedicated "severity" documentation section.
-    option: value
+  default: standard
+  enable:
+    - asciicheck
+    - bidichk
+    - containedctx
+    - contextcheck
+    - copyloopvar
+    - cyclop
+    - dogsled
+    - dupl
+    - dupword
+    - embeddedstructfieldcheck
+    - gochecknoinits
+    - gosec
+    - mnd
+    - modernize
+    - tagalign
+    - usestdlibvars
+    # - varnamelen
+    - wastedassign
+    - wsl_v5

@@ -20,7 +20,7 @@ func NewRepo(db *pgxpool.Pool) Repo {
 
 type Repo interface {
 	GetUserOAuth(ctx context.Context, provider string, idToken string) (*model.UserOAuth, error)
-	LinkOAuth(ctx context.Context, provider string, userID string, idToken string) error
+	LinkOAuth(ctx context.Context, provider string, userID string, idToken string, session *model.Session) error
 	UnLinkOAuth(ctx context.Context, provider string, userID string) error
 	CreateOAuthRegistration(ctx context.Context, provider string, oauthRegistration *model.OauthRegistration) error
 	GetOAuthRegistration(ctx context.Context, registrationId string) (*model.OauthRegistration, error)
@@ -49,8 +49,9 @@ func (s *repo) GetUserOAuth(ctx context.Context, provider string, idToken string
 	return userOAuth, err
 }
 
-func (s *repo) LinkOAuth(ctx context.Context, provider string, userID string, idToken string) error {
-	query := `
+func (s *repo) LinkOAuth(ctx context.Context, provider string, userID string, idToken string, session *model.Session) error {
+	batch := &pgx.Batch{}
+	batch.Queue(`
 		INSERT INTO user_oauth(user_id, oauth_provider_id, id_token)
 		VALUES (
 			@user_id,
@@ -60,9 +61,22 @@ func (s *repo) LinkOAuth(ctx context.Context, provider string, userID string, id
 			),
 			@id_token
 		)
-	`
-	args := pgx.NamedArgs{"user_id": userID, "provider": provider, "id_token": idToken}
-	_, err := s.db.Exec(ctx, query, args)
+	`,
+		pgx.NamedArgs{"user_id": userID, "provider": provider, "id_token": idToken},
+	)
+	batch.Queue(`
+		INSERT INTO sessions(session_id, user_id, created_at, expires_at, two_factor_verified)
+		VALUES (@sessionId, @userId, @createdAt, @expiresAt, @twoFactorVerified)
+	`,
+		pgx.NamedArgs{
+			"sessionId":         session.Id,
+			"userId":            session.UserId,
+			"createdAt":         session.CreatedAt,
+			"expiresAt":         session.ExpiresAt,
+			"twoFactorVerified": session.TwoFactorVerified,
+		},
+	)
+	_, err := s.db.SendBatch(ctx, batch).Exec()
 
 	return err
 }
