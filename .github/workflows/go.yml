@@ -41,7 +41,7 @@ jobs:
     services:
       postgres:
         # Docker Hub image
-        image: postgres:lastest
+        image: postgres:latest
         env:
           POSTGRES_DB: ${{env.PGDATABASE}}
           POSTGRES_USER: ${{env.PGUSER}}
