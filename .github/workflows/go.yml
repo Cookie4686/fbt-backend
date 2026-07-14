@@ -43,9 +43,9 @@ jobs:
         # Docker Hub image
         image: postgres
         env:
-          POSTGRES_DB: $PGDATABASE
-          POSTGRES_USER: $PGUSER
-          POSTGRES_PASSWORD: $PGPASSWORD
+          POSTGRES_DB: ${{env.PGDATABASE}}
+          POSTGRES_USER: ${{env.PGUSER}}
+          POSTGRES_PASSWORD: ${{env.PGPASSWORD}}
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -54,7 +54,7 @@ jobs:
           --health-retries 5
         ports:
           # Maps tcp port 5432 on service container to the host
-          - "$PGPORT:5432"
+          - 5432:5432
 
     steps:
       - uses: actions/checkout@v7
@@ -74,7 +74,7 @@ jobs:
         run: goose up
         env:
           GOOSE_DRIVER: postgres
-          GOOSE_DBSTRING: "postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/$PGDATABASE"
+          GOOSE_DBSTRING: postgres://${{env.PGUSER}}:${{env.PGPASSWORD}}@localhost:${{env.PGPORT}}/${{env.PGDATABASE}}
           GOOSE_MIGRATION_DIR: ./sqlc/schema
 
       - name: Build
