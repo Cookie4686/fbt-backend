@@ -1,5 +1,7 @@
 [![wakatime](https://wakatime.com/badge/github/Cookie4686/fbt-backend.svg)](https://wakatime.com/badge/github/Cookie4686/fbt-backend)
 
+[![Build Status](https://github.com/Cookie4686/fbt-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/Cookie4686/fbt-backend/actions/workflows/ci.yml)
+
 # About this project
 
 โปรเจคนี้ทำมาเพื่อเรียนรู้การพัฒนาแอปพลิเคชันด้วยภาษา go โดยมีขอบเขตค่อนข้างกว้างเพื่อจะได้เรียนรู้อย่างครอบคลุม  
@@ -60,4 +62,3 @@
 แต่อาจทำโมเดลมาดูรูปใบเสร็จแล้วเอาไปบันทึกอัตโนมัติเอา  
 หรือไม่ก็ทำพวกคล้ายๆ web scrape ให้ login ไปดึงข้อมูลมา หรือหายิง api ย้อนไปเอา  
 ตรงนี้ยังไม่ได้คิดเท่าไรเพราะ scope ส่วนอื่นก็เยอะแล้ว
-

@@ -83,6 +83,7 @@ jobs:
         run: |
           gotestsum ./internal/... -cover -coverpkg=./internal/... -coverprofile=cover.out -p=1
           go tool cover -func cover.out -o cover.txt
+          cat cover.txt
           go tool cover -html cover.out -o cover.html
         env:
           CWD: ${{github.workspace}}
