@@ -21,7 +21,7 @@ func NewTestLocalAPI(t *testing.T) (ctx context.Context, baseURL string) {
 
 	ChangeDirectory(t)
 
-	d, err := util.NewDependency(ctx, ".env.test")
+	d, err := util.NewDependency(ctx)
 	require.NoError(t, err)
 
 	ClearDatabase(t, ctx, d.DB)

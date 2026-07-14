@@ -16,8 +16,8 @@ type Dependency struct {
 	Mail   *mail.Client
 }
 
-func NewDependency(ctx context.Context, envFilePath string) (*Dependency, error) {
-	if cfg, err := NewConfig(envFilePath); err != nil {
+func NewDependency(ctx context.Context) (*Dependency, error) {
+	if cfg, err := NewConfig(); err != nil {
 		return nil, err
 	} else if logger, err := NewLogger(cfg); err != nil {
 		return nil, err
@@ -48,6 +48,7 @@ func NewDatabasePool(ctx context.Context, cfg *Config) (*pgxpool.Pool, error) {
 	}
 
 	conn, err := pgxpool.NewWithConfig(ctx, dbConfig)
+
 	return conn, err
 }
 
@@ -62,5 +63,6 @@ func NewMailClient(cfg *Config) (*mail.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return client, err
 }

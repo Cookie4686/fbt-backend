@@ -13,9 +13,11 @@ var (
 
 func ChangeDirectory(t *testing.T) {
 	var cwd string
-	cwd, ok := os.LookupEnv("cwd")
+
+	cwd, ok := os.LookupEnv("CWD")
 	if !ok {
 		flag.Parse()
+
 		if cwd_args == nil {
 			t.FailNow()
 		} else {
@@ -28,5 +30,4 @@ func ChangeDirectory(t *testing.T) {
 			fmt.Println("Chdir error:", err)
 		}
 	}
-
 }
