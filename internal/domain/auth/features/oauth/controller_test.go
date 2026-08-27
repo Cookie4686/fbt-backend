@@ -1,29 +1,29 @@
 package oauth_test
 
 import (
-	authv1 "fbt/backend/gen/proto/go/auth/v1"
-	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
-	"fbt/backend/internal/interceptor"
-	"fbt/backend/internal/test"
-	"net/http"
 	"testing"
 
-	"connectrpc.com/connect"
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
+	"fbt/backend/internal/domain/auth/features/oauth"
+	"fbt/backend/internal/domain/auth/service"
+	"fbt/backend/internal/test"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestOAuth(t *testing.T) {
-	_, baseURL := test.NewTestLocalAPI(t)
+	d := test.Setup(t)
 
-	client := authv1connect.NewOAuthServiceClient(http.DefaultClient, baseURL, connect.WithGRPC())
+	service := service.NewService(d)
+	controller := oauth.NewController(service, oauth.NewRepo(d.DB))
 
 	var registrationID string
 
 	email := "test@email.com"
 
 	t.Run("Login", func(t *testing.T) {
-		res, err := client.Login(t.Context(), &authv1.OAuthServiceLoginRequest{
+		res, err := controller.Login(t.Context(), &authv1.OAuthServiceLoginRequest{
 			Token:    "token",
 			Provider: "google",
 			Email:    &email,
@@ -38,7 +38,7 @@ func TestOAuth(t *testing.T) {
 	var session *authv1.Session
 
 	t.Run("Register", func(t *testing.T) {
-		res, err := client.Register(t.Context(), &authv1.OAuthServiceRegisterRequest{
+		res, err := controller.Register(t.Context(), &authv1.OAuthServiceRegisterRequest{
 			Username:        "test",
 			Email:           "test@email.com",
 			Password:        "12345678",
@@ -56,9 +56,9 @@ func TestOAuth(t *testing.T) {
 	})
 
 	t.Run("Status", func(t *testing.T) {
-		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
+		ctx := test.NewAuthContext(t.Context(), session.Id, service)
 
-		res, err := client.Status(ctx, &authv1.OAuthServiceStatusRequest{})
+		res, err := controller.Status(ctx, &authv1.OAuthServiceStatusRequest{})
 		require.NoError(t, err)
 
 		assert.Len(t, res.Providers, 1)

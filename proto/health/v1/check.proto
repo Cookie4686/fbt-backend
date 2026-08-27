@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package health.v1;
+
+import "buf/validate/validate.proto";
+
+service HealthService {
+  rpc Status(HealthServiceStatusRequest) returns (HealthServiceStatusResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+}
+
+message HealthServiceStatusRequest {}
+message HealthServiceStatusResponse {
+  bool is_server_up = 1;
+  bool is_database_up = 2 [(buf.validate.field).required = true];
+}

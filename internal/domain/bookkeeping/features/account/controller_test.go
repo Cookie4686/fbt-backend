@@ -1,26 +1,26 @@
 package account_test
 
 import (
-	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
-	"fbt/backend/gen/proto/go/bookkeeping/v1/bookkeepingv1connect"
-	"fbt/backend/internal/domain/bookkeeping/model"
-	"fbt/backend/internal/interceptor"
-	"fbt/backend/internal/test"
-	"net/http"
 	"slices"
 	"testing"
 
-	"connectrpc.com/connect"
+	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
+	authService "fbt/backend/internal/domain/auth/service"
+	"fbt/backend/internal/domain/bookkeeping/features/account"
+	"fbt/backend/internal/domain/bookkeeping/model"
+	"fbt/backend/internal/domain/bookkeeping/service"
+	"fbt/backend/internal/test"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAccount(t *testing.T) {
-	ctx, baseURL := test.NewTestLocalAPI(t)
+	d := test.Setup(t)
 
-	client := bookkeepingv1connect.NewAccountServiceClient(http.DefaultClient, baseURL, connect.WithGRPC())
-
-	session := test.SetupUser(t, ctx, baseURL)
+	authService := authService.NewService(d)
+	session := test.SetupUser(t, d, authService)
+	controller := account.NewController(service.NewService(d), account.NewRepo(d.DB))
 
 	accounts := []model.Account{
 		{Name: "Cash", IsDebit: true, UserId: session.UserId},
@@ -29,19 +29,19 @@ func TestAccount(t *testing.T) {
 	}
 
 	t.Run("Get All (Empty)", func(t *testing.T) {
-		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
+		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
 
-		res, err := client.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
+		res, err := controller.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
 		require.NoError(t, err)
 
 		assert.Len(t, res.Account, 0)
 	})
 
 	t.Run("Create", func(t *testing.T) {
-		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
+		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
 
 		for idx, a := range accounts {
-			res, err := client.Create(ctx, &bookkeepingv1.AccountServiceCreateRequest{
+			res, err := controller.Create(ctx, &bookkeepingv1.AccountServiceCreateRequest{
 				Name:    a.Name,
 				IsDebit: a.IsDebit,
 			})
@@ -52,9 +52,9 @@ func TestAccount(t *testing.T) {
 	})
 
 	t.Run("Get All", func(t *testing.T) {
-		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
+		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
 
-		res, err := client.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
+		res, err := controller.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
 		require.NoError(t, err)
 
 		assert.ElementsMatch(t, accounts, protoToModel(res.Account))
@@ -67,19 +67,19 @@ func TestAccount(t *testing.T) {
 	updated.IsDebit = false
 
 	t.Run("Update", func(t *testing.T) {
-		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
+		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
 
-		_, err := client.Update(ctx, &bookkeepingv1.AccountServiceUpdateRequest{
+		_, err := controller.Update(ctx, &bookkeepingv1.AccountServiceUpdateRequest{
 			Id:      updated.ID,
 			Name:    updated.Name,
 			IsDebit: updated.IsDebit,
 		})
 		require.NoError(t, err)
 
-		res, err := client.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
+		res, err := controller.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
 		require.NoError(t, err)
 
-		updatedInDB := (res.Account)[slices.IndexFunc(res.Account, func(a *bookkeepingv1.Account) bool {
+		updatedInDB := res.Account[slices.IndexFunc(res.Account, func(a *bookkeepingv1.Account) bool {
 			return a.Id == updated.ID
 		})]
 
@@ -89,9 +89,9 @@ func TestAccount(t *testing.T) {
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
+		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
 
-		_, err := client.Delete(ctx, &bookkeepingv1.AccountServiceDeleteRequest{
+		_, err := controller.Delete(ctx, &bookkeepingv1.AccountServiceDeleteRequest{
 			Id: updated.ID,
 		})
 		require.NoError(t, err)
@@ -100,7 +100,7 @@ func TestAccount(t *testing.T) {
 			return a.ID == updated.ID
 		})
 
-		res, err := client.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
+		res, err := controller.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
 		require.NoError(t, err)
 
 		assert.ElementsMatch(t, accounts, protoToModel(res.Account))

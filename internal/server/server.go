@@ -1,14 +1,17 @@
+// Package server for initializing RPC server
 package server
 
 import (
-	"fbt/backend/internal/domain/auth"
-	"fbt/backend/internal/domain/auth/service"
-	"fbt/backend/internal/domain/bookkeeping"
-	"fbt/backend/internal/interceptor"
-	"fbt/backend/internal/util"
 	"fmt"
 	"net/http"
 	"time"
+
+	"fbt/backend/internal/domain/auth"
+	"fbt/backend/internal/domain/auth/service"
+	"fbt/backend/internal/domain/bookkeeping"
+	"fbt/backend/internal/domain/health"
+	"fbt/backend/internal/interceptor"
+	"fbt/backend/internal/util"
 
 	"connectrpc.com/connect"
 )
@@ -30,6 +33,7 @@ func NewServer(d *util.Dependency) *http.Server {
 
 	auth.RegisterService(mux, d, opts)
 	bookkeeping.RegisterService(mux, d, opts)
+	health.RegisterService(mux, d, opts)
 
 	p := new(http.Protocols)
 	p.SetHTTP1(true)

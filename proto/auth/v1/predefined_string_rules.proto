@@ -5,14 +5,14 @@ package auth.v1;
 import "buf/validate/validate.proto";
 
 extend buf.validate.StringRules {
-  optional bool username_component = 10000 [(buf.validate.predefined).cel = {
+  optional bool username_component = 50000 [(buf.validate.predefined).cel = {
     id: "string.username_component"
     message: "value must be between 3 and 255 characters containing only alphanumerical values"
     expression: "this.matches('^[A-Za-z0-9]{3,255}$')"
   }];
-  optional bool password_component = 10001 [(buf.validate.predefined).cel = {
+  optional bool password_component = 50001 [(buf.validate.predefined).cel = {
     id: "string.password_component"
     message: "value must be between 8 and 255 characters"
-    expression: "this.size() <= 8 && this.size() <= 255"
+    expression: "this.matches('^[A-Za-z0-9]{8,255}$')"
   }];
 }

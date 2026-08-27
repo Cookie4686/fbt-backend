@@ -6,3 +6,6 @@
 sqlc/out
 
 *.out
+
+cover.*
+coverfunc.*

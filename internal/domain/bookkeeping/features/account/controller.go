@@ -2,26 +2,31 @@ package account
 
 import (
 	"context"
+	"net/http"
+
 	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
 	"fbt/backend/gen/proto/go/bookkeeping/v1/bookkeepingv1connect"
 	"fbt/backend/internal/domain/bookkeeping/model"
 	"fbt/backend/internal/domain/bookkeeping/service"
 	"fbt/backend/internal/interceptor"
-	"net/http"
 
 	"connectrpc.com/connect"
 )
 
-type Server struct {
+type con struct {
 	service service.Service
 	repo    Repo
 }
 
 func NewServiceHandler(service service.Service, repo Repo, opts ...connect.HandlerOption) (string, http.Handler) {
-	return bookkeepingv1connect.NewAccountServiceHandler(&Server{service, repo}, opts...)
+	return bookkeepingv1connect.NewAccountServiceHandler(NewController(service, repo), opts...)
 }
 
-func (c *Server) GetAll(ctx context.Context, in *bookkeepingv1.AccountServiceGetAllRequest) (*bookkeepingv1.AccountServiceGetAllResponse, error) {
+func NewController(service service.Service, repo Repo) *con {
+	return &con{service, repo}
+}
+
+func (c *con) GetAll(ctx context.Context, in *bookkeepingv1.AccountServiceGetAllRequest) (*bookkeepingv1.AccountServiceGetAllResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -43,7 +48,7 @@ func (c *Server) GetAll(ctx context.Context, in *bookkeepingv1.AccountServiceGet
 	return &bookkeepingv1.AccountServiceGetAllResponse{Account: accounts}, nil
 }
 
-func (c *Server) Create(ctx context.Context, in *bookkeepingv1.AccountServiceCreateRequest) (*bookkeepingv1.AccountServiceCreateResponse, error) {
+func (c *con) Create(ctx context.Context, in *bookkeepingv1.AccountServiceCreateRequest) (*bookkeepingv1.AccountServiceCreateResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -68,7 +73,7 @@ func (c *Server) Create(ctx context.Context, in *bookkeepingv1.AccountServiceCre
 	return &bookkeepingv1.AccountServiceCreateResponse{Account: account.ToProto()}, nil
 }
 
-func (c *Server) Update(ctx context.Context, in *bookkeepingv1.AccountServiceUpdateRequest) (*bookkeepingv1.AccountServiceUpdateResponse, error) {
+func (c *con) Update(ctx context.Context, in *bookkeepingv1.AccountServiceUpdateRequest) (*bookkeepingv1.AccountServiceUpdateResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -92,7 +97,7 @@ func (c *Server) Update(ctx context.Context, in *bookkeepingv1.AccountServiceUpd
 	return &bookkeepingv1.AccountServiceUpdateResponse{Account: account.ToProto()}, nil
 }
 
-func (c *Server) Delete(ctx context.Context, in *bookkeepingv1.AccountServiceDeleteRequest) (*bookkeepingv1.AccountServiceDeleteResponse, error) {
+func (c *con) Delete(ctx context.Context, in *bookkeepingv1.AccountServiceDeleteRequest) (*bookkeepingv1.AccountServiceDeleteResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 

@@ -4,6 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"net/http"
+	"time"
+
 	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
 	"fbt/backend/internal/domain/auth/config"
@@ -12,8 +15,6 @@ import (
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/interceptor"
 	"fbt/backend/internal/util"
-	"net/http"
-	"time"
 
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -28,7 +29,11 @@ type Server struct {
 }
 
 func NewServiceHandler(service service.Service, repo Repo, opts ...connect.HandlerOption) (string, http.Handler) {
-	return authv1connect.NewOAuthServiceHandler(&Server{service, repo}, opts...)
+	return authv1connect.NewOAuthServiceHandler(NewController(service, repo), opts...)
+}
+
+func NewController(service service.Service, repo Repo) *Server {
+	return &Server{service, repo}
 }
 
 func (s *Server) Register(ctx context.Context, in *authv1.OAuthServiceRegisterRequest) (*authv1.OAuthServiceRegisterResponse, error) {

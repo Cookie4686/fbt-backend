@@ -1,38 +1,34 @@
+// Package test for testing utilities
 package test
 
 import (
-	"context"
 	"database/sql"
-	"fbt/backend/internal/server"
-	"fbt/backend/internal/util"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"fbt/backend/internal/util"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/require"
 )
 
-func NewTestLocalAPI(t *testing.T) (ctx context.Context, baseURL string) {
-	ctx = t.Context()
+func SetupDatabase(t *testing.T, cfg *util.Config) *pgxpool.Pool {
+	ctx := t.Context()
 
-	ChangeDirectory(t)
+	ClearAndMigrateDatabase(t, cfg.PGURL)
 
-	d, err := util.NewDependency(ctx)
+	db, err := util.NewDatabasePool(ctx, cfg.PGURL)
 	require.NoError(t, err)
 
-	ClearDatabase(t, ctx, d.CFG.PGURL)
-
-	svr := server.NewServer(d)
-
-	go func() { server.StartListening(svr, d) }()
-
-	return ctx, fmt.Sprintf("http://localhost:%d", d.CFG.API.PORT)
+	return db
 }
 
-func ClearDatabase(t *testing.T, ctx context.Context, pgurl string) {
+func ClearAndMigrateDatabase(t *testing.T, pgurl string) {
+	ctx := t.Context()
+
 	sqlDB, err := sql.Open("pgx", pgurl)
 	require.NoError(t, err)
 

@@ -20,7 +20,7 @@ func NewDependency(ctx context.Context) (*Dependency, error) {
 		return nil, err
 	} else if logger, err := NewLogger(cfg); err != nil {
 		return nil, err
-	} else if db, err := NewDatabasePool(ctx, cfg); err != nil {
+	} else if db, err := NewDatabasePool(ctx, cfg.PGURL); err != nil {
 		return nil, err
 	} else if mail, err := NewMailClient(cfg); err != nil {
 		return nil, err
@@ -37,8 +37,8 @@ func NewLogger(cfg *Config) (logger *zap.Logger, err error) {
 	}
 }
 
-func NewDatabasePool(ctx context.Context, cfg *Config) (*pgxpool.Pool, error) {
-	dbConfig, err := pgxpool.ParseConfig(cfg.PGURL)
+func NewDatabasePool(ctx context.Context, connString string) (*pgxpool.Pool, error) {
+	dbConfig, err := pgxpool.ParseConfig(connString)
 	if err != nil {
 		return nil, err
 	}

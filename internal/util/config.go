@@ -1,7 +1,9 @@
+// Package util for project-wide utility functions
 package util
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"testing"
 
@@ -44,7 +46,7 @@ func NewConfig() (*Config, error) {
 	if err := godotenv.Load(fmt.Sprintf(".env.%s", environment)); err != nil {
 		if err := godotenv.Load(".env"); err != nil {
 			if err := godotenv.Load(".env.example"); err != nil {
-				return nil, err
+				log.Print("No environment files specified")
 			}
 		}
 	}

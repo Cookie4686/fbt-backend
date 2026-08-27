@@ -5,6 +5,8 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
+	"net/http"
+
 	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
 	"fbt/backend/internal/domain/auth/config"
@@ -12,7 +14,6 @@ import (
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/util"
-	"net/http"
 
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -25,7 +26,11 @@ type con struct {
 }
 
 func NewServiceHandler(service service.Service, repo Repo, opts ...connect.HandlerOption) (string, http.Handler) {
-	return authv1connect.NewCredentialServiceHandler(&con{service, repo}, opts...)
+	return authv1connect.NewCredentialServiceHandler(NewController(service, repo), opts...)
+}
+
+func NewController(service service.Service, repo Repo) *con {
+	return &con{service, repo}
 }
 
 func (s *con) Register(ctx context.Context, req *authv1.CredentialServiceRegisterRequest) (*authv1.CredentialServiceRegisterResponse, error) {

@@ -1,24 +1,23 @@
 package webauthn_test
 
 import (
-	authv1 "fbt/backend/gen/proto/go/auth/v1"
-	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
-	"fbt/backend/internal/domain/auth/model"
-	"fbt/backend/internal/interceptor"
-	"fbt/backend/internal/test"
-	"net/http"
 	"testing"
 
-	"connectrpc.com/connect"
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
+	"fbt/backend/internal/domain/auth/features/webauthn"
+	"fbt/backend/internal/domain/auth/model"
+	"fbt/backend/internal/domain/auth/service"
+	"fbt/backend/internal/test"
+
 	"github.com/stretchr/testify/require"
 )
 
 func TestWebAuthn(t *testing.T) {
-	ctx, baseURL := test.NewTestLocalAPI(t)
+	d := test.Setup(t)
 
-	client := authv1connect.NewWebAuthnServiceClient(http.DefaultClient, baseURL, connect.WithGRPC())
-
-	session := test.SetupUser(t, ctx, baseURL)
+	service := service.NewService(d)
+	session := test.SetupUser(t, d, service)
+	controller := webauthn.NewController(service, webauthn.NewRepo(d.DB))
 
 	credential := &model.WebAuthnCredential{
 		RpID:           "localhost",
@@ -36,8 +35,8 @@ func TestWebAuthn(t *testing.T) {
 	}
 
 	t.Run("Create User Passkey", func(t *testing.T) {
-		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
-		res, err := client.CreateUserPasskey(ctx, &authv1.WebAuthnServiceCreateUserPasskeyRequest{
+		ctx := test.NewAuthContext(t.Context(), session.Id, service)
+		res, err := controller.CreateUserPasskey(ctx, &authv1.WebAuthnServiceCreateUserPasskeyRequest{
 			Credential: &authv1.WebAuthnCredential{
 				RpId:         credential.RpID,
 				UserId:       credential.UserID,
@@ -57,7 +56,7 @@ func TestWebAuthn(t *testing.T) {
 
 	t.Run("Get User Passkey", func(t *testing.T) {
 		ctx := t.Context()
-		res, err := client.GetUserPasskey(ctx, &authv1.WebAuthnServiceGetUserPasskeyRequest{
+		res, err := controller.GetUserPasskey(ctx, &authv1.WebAuthnServiceGetUserPasskeyRequest{
 			RpId:         credential.RpID,
 			CredentialId: credential.CredentialID,
 		},
@@ -67,8 +66,8 @@ func TestWebAuthn(t *testing.T) {
 	})
 
 	t.Run("Update User Passkey Counter", func(t *testing.T) {
-		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
-		res, err := client.UpdatePasskeyCounter(ctx, &authv1.WebAuthnServiceUpdatePasskeyCounterRequest{
+		ctx := test.NewAuthContext(t.Context(), session.Id, service)
+		res, err := controller.UpdatePasskeyCounter(ctx, &authv1.WebAuthnServiceUpdatePasskeyCounterRequest{
 			RpId:         credential.RpID,
 			CredentialId: credential.CredentialID,
 			Counter:      credential.Counter + 1,

@@ -2,7 +2,9 @@ package interceptor
 
 import (
 	"context"
+
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
+	"fbt/backend/gen/proto/go/health/v1/healthv1connect"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/util"
@@ -36,11 +38,28 @@ func IsPrivateMethod(fullMethod string) bool {
 		authv1connect.OAuthServiceRegisterProcedure,
 		authv1connect.OAuthServiceLoginProcedure,
 		authv1connect.WebAuthnServiceGetUserPasskeyProcedure,
-		authv1connect.WebAuthnServiceUpdatePasskeyCounterProcedure:
+		authv1connect.WebAuthnServiceUpdatePasskeyCounterProcedure,
+		healthv1connect.HealthServiceStatusProcedure:
 		return false
 	default:
 		return true
 	}
+}
+
+func VerifyTokenContext(ctx context.Context, service service.Service) (context.Context, error) {
+	token, err := FromTokenContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	auth, err := service.Validate(ctx, token)
+	if err == errors.NotFound {
+		return nil, errors.Unauthorized
+	} else if err != nil {
+		return nil, errors.DBError
+	}
+
+	return NewAuthContext(ctx, auth), err
 }
 
 func (s *interceptorProvider) Logging() connect.UnaryInterceptorFunc {
@@ -77,20 +96,12 @@ func (s *interceptorProvider) Auth() connect.UnaryInterceptorFunc {
 
 			// Intercept Private route
 			if IsPrivateMethod(req.Spec().Procedure) {
-				// authentication (token verification)
-				token, err := FromTokenContext(ctx)
+				authContext, err := VerifyTokenContext(ctx, s.service)
 				if err != nil {
 					return nil, err
 				}
 
-				auth, err := s.service.Validate(ctx, token)
-				if err == errors.NotFound {
-					return nil, errors.Unauthorized
-				} else if err != nil {
-					return nil, errors.DBError
-				}
-
-				ctx = NewAuthContext(ctx, auth)
+				return next(authContext, req)
 			}
 
 			return next(ctx, req)

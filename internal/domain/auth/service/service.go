@@ -1,3 +1,4 @@
+// Package service for common-use services in authentication domain
 package service
 
 import (

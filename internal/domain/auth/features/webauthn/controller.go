@@ -2,12 +2,13 @@ package webauthn
 
 import (
 	"context"
+	"net/http"
+
 	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/interceptor"
-	"net/http"
 
 	"connectrpc.com/connect"
 )
@@ -18,7 +19,11 @@ type Server struct {
 }
 
 func NewServiceHandler(service service.Service, repo Repo, opts ...connect.HandlerOption) (string, http.Handler) {
-	return authv1connect.NewWebAuthnServiceHandler(&Server{service, repo}, opts...)
+	return authv1connect.NewWebAuthnServiceHandler(NewController(service, repo), opts...)
+}
+
+func NewController(service service.Service, repo Repo) *Server {
+	return &Server{service, repo}
 }
 
 func (s *Server) GetUserPasskey(ctx context.Context, in *authv1.WebAuthnServiceGetUserPasskeyRequest) (*authv1.WebAuthnServiceGetUserPasskeyResponse, error) {

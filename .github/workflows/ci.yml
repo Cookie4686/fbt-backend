@@ -19,16 +19,22 @@ env:
 
   ENCRYPTION_KEY: "+TBsWGoCTXFJHW2bBAdCHA=="
 
+  MAIL_ADDRESS: "user@example.com"
+  MAIL_SERVER: "smtp.example.com"
+  MAIL_PORT: "587"
+  MAIL_USERNAME: "user"
+  MAIL_PASSWORD: "123456"
+
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: stable
+          go-version: '1.25'
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
@@ -36,11 +42,10 @@ jobs:
           version: v2.12
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
-        # Docker Hub image
         image: postgres:18
         env:
           POSTGRES_DB: ${{env.PGDATABASE}}
@@ -61,10 +66,10 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: stable
+          go-version: '1.25'
 
       - name: Install dependencies
-        run: go get .
+        run: go mod download
 
       - name: Build
         run: go build -v ./...

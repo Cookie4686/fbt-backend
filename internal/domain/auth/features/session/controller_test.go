@@ -1,29 +1,28 @@
 package session_test
 
 import (
-	authv1 "fbt/backend/gen/proto/go/auth/v1"
-	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
-	"fbt/backend/internal/interceptor"
-	"fbt/backend/internal/test"
-	"net/http"
 	"testing"
 
-	"connectrpc.com/connect"
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
+	"fbt/backend/internal/domain/auth/features/session"
+	"fbt/backend/internal/domain/auth/service"
+	"fbt/backend/internal/test"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSession(t *testing.T) {
-	ctx, baseURL := test.NewTestLocalAPI(t)
+	d := test.Setup(t)
 
-	client := authv1connect.NewSessionServiceClient(http.DefaultClient, baseURL, connect.WithGRPC())
-
-	session := test.SetupUser(t, ctx, baseURL)
+	service := service.NewService(d)
+	controller := session.NewController(service)
+	session := test.SetupUser(t, d, nil)
 
 	t.Run("Validate", func(t *testing.T) {
-		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
+		ctx := test.NewAuthContext(t.Context(), session.Id, service)
 
-		res, err := client.Validate(ctx, &authv1.SessionServiceValidateRequest{})
+		res, err := controller.Validate(ctx, &authv1.SessionServiceValidateRequest{})
 		require.NoError(t, err)
 
 		assert.Equal(t, session.Id, res.Session.Id)
@@ -31,16 +30,16 @@ func TestSession(t *testing.T) {
 	})
 
 	t.Run("Logout", func(t *testing.T) {
-		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
+		ctx := test.NewAuthContext(t.Context(), session.Id, service)
 
-		_, err := client.Logout(ctx, &authv1.SessionServiceLogoutRequest{})
+		_, err := controller.Logout(ctx, &authv1.SessionServiceLogoutRequest{})
 		require.NoError(t, err)
 	})
 
 	t.Run("Validate", func(t *testing.T) {
-		ctx := interceptor.NewTokenContext(t.Context(), session.Id)
+		ctx := test.NewAuthContext(t.Context(), session.Id, service)
 
-		_, err := client.Validate(ctx, &authv1.SessionServiceValidateRequest{})
+		_, err := controller.Validate(ctx, &authv1.SessionServiceValidateRequest{})
 		require.Error(t, err)
 	})
 }

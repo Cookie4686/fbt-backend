@@ -2,12 +2,13 @@ package session
 
 import (
 	"context"
+	"net/http"
+
 	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/interceptor"
-	"net/http"
 
 	"connectrpc.com/connect"
 )
@@ -18,6 +19,10 @@ type Server struct {
 
 func NewServiceHandler(service service.Service, opts ...connect.HandlerOption) (string, http.Handler) {
 	return authv1connect.NewSessionServiceHandler(&Server{service}, opts...)
+}
+
+func NewController(service service.Service) *Server {
+	return &Server{service}
 }
 
 func (s *Server) Validate(ctx context.Context, in *authv1.SessionServiceValidateRequest) (*authv1.SessionServiceValidateResponse, error) {
