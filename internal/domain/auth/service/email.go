@@ -16,6 +16,5 @@ func (s *service) SendVerificationMail(email string, otp string) error {
 	// if err := s.Mail.DialAndSend(message); err != nil {
 	// 	return err
 	// }
-
 	return nil
 }
