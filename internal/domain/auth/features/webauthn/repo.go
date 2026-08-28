@@ -2,6 +2,7 @@ package webauthn
 
 import (
 	"context"
+
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/util"
 
@@ -10,9 +11,9 @@ import (
 )
 
 type Repo interface {
-	GetPasskey(ctx context.Context, rpID string, credentialID string) (*model.WebAuthnCredential, error)
+	GetPasskey(ctx context.Context, rpID, credentialID string) (*model.WebAuthnCredential, error)
 	CreatePasskey(ctx context.Context, credential *model.WebAuthnCredential) error
-	UpdatePasskeyCounter(ctx context.Context, rpID string, credentialID string, counter int64) (*model.WebAuthnCredential, error)
+	UpdatePasskeyCounter(ctx context.Context, rpID, credentialID string, counter int64) (*model.WebAuthnCredential, error)
 }
 
 type repo struct {
@@ -23,7 +24,7 @@ func NewRepo(db *pgxpool.Pool) Repo {
 	return Repo(&repo{db})
 }
 
-func (s *repo) GetPasskey(ctx context.Context, rpID string, credentialID string) (*model.WebAuthnCredential, error) {
+func (s *repo) GetPasskey(ctx context.Context, rpID, credentialID string) (*model.WebAuthnCredential, error) {
 	query := `
 		SELECT * FROM webauthn_credentials
 		WHERE rp_id = @rp_id
@@ -60,7 +61,7 @@ func (s *repo) CreatePasskey(ctx context.Context, credential *model.WebAuthnCred
 	return err
 }
 
-func (s *repo) UpdatePasskeyCounter(ctx context.Context, rpID string, credentialID string, counter int64) (*model.WebAuthnCredential, error) {
+func (s *repo) UpdatePasskeyCounter(ctx context.Context, rpID, credentialID string, counter int64) (*model.WebAuthnCredential, error) {
 	query := `
 		UPDATE webauthn_credentials 
 		SET counter = @counter

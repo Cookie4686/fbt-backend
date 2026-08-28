@@ -1,19 +1,24 @@
+// Package model for authenticaiton-related database schema
 package model
 
 import (
-	authv1 "fbt/backend/gen/proto/go/auth/v1"
-	"fbt/backend/internal/util"
 	"time"
+
+	"fbt/backend/internal/util"
+
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-const SessionExpiresIn = 24 * time.Hour
-const SessionMaxAge = 72 * time.Hour
+const (
+	SessionExpiresIn = 24 * time.Hour
+	SessionMaxAge    = 72 * time.Hour
+)
 
 type User struct {
-	Id              string      `db:"user_id"`
+	ID              string      `db:"user_id"`
 	Username        string      `db:"username"`
 	Email           string      `db:"email"`
 	EmailVerified   bool        `db:"email_verified"`
@@ -24,7 +29,7 @@ type User struct {
 
 func (u *User) ToProto() *authv1.User {
 	return &authv1.User{
-		Id:              u.Id,
+		Id:              u.ID,
 		Username:        u.Username,
 		Email:           u.Email,
 		EmailVerified:   u.EmailVerified,
@@ -33,17 +38,17 @@ func (u *User) ToProto() *authv1.User {
 }
 
 type Session struct {
-	Id                string    `db:"session_id"`
-	UserId            string    `db:"user_id"`
+	ID                string    `db:"session_id"`
+	UserID            string    `db:"user_id"`
 	CreatedAt         time.Time `db:"created_at"`
 	ExpiresAt         time.Time `db:"expires_at"`
 	TwoFactorVerified bool      `db:"two_factor_verified"`
 }
 
-func NewSession(userId string, twoFactorVerified bool) *Session {
+func NewSession(userID string, twoFactorVerified bool) *Session {
 	return &Session{
-		Id:                util.GenerateBase64UUID(),
-		UserId:            userId,
+		ID:                util.GenerateBase64UUID(),
+		UserID:            userID,
 		CreatedAt:         time.Now(),
 		ExpiresAt:         time.Now().Add(SessionExpiresIn),
 		TwoFactorVerified: twoFactorVerified,
@@ -52,8 +57,8 @@ func NewSession(userId string, twoFactorVerified bool) *Session {
 
 func (s *Session) ToProto() *authv1.Session {
 	return &authv1.Session{
-		Id:                s.Id,
-		UserId:            s.UserId,
+		Id:                s.ID,
+		UserId:            s.UserID,
 		TwoFactorVerified: s.TwoFactorVerified,
 		ExpiresAt:         timestamppb.New(s.ExpiresAt),
 	}

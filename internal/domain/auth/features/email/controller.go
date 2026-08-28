@@ -1,16 +1,19 @@
+// Package email for email verification and email-related authentication service
 package email
 
 import (
 	"context"
-	authv1 "fbt/backend/gen/proto/go/auth/v1"
+	"net/http"
+	"time"
+
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/interceptor"
 	"fbt/backend/internal/util"
-	"net/http"
-	"time"
+
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
 
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -41,15 +44,15 @@ func (s *Server) SendOTP(ctx context.Context, in *authv1.EmailServiceSendOTPRequ
 		return nil, err
 	}
 
-	verificationId := util.GenerateBase32UUID()
+	verificationID := util.GenerateBase32UUID()
 
 	if err := s.service.SendVerificationMail(in.Email, otp); err != nil {
 		return nil, err
 	}
 
 	err = s.repo.CreateEmailVerification(ctx, &model.EmailVerification{
-		UserID:         auth.Session.UserId,
-		VerificationID: verificationId,
+		UserID:         auth.Session.UserID,
+		VerificationID: verificationID,
 		Otp:            otp,
 		ExpiresAt:      pgtype.Timestamp{Time: time.Now().Add(time.Hour), Valid: true},
 	})
@@ -57,7 +60,7 @@ func (s *Server) SendOTP(ctx context.Context, in *authv1.EmailServiceSendOTPRequ
 		return nil, err
 	}
 
-	return &authv1.EmailServiceSendOTPResponse{VerificationId: verificationId}, nil
+	return &authv1.EmailServiceSendOTPResponse{VerificationId: verificationID}, nil
 }
 
 func (s *Server) Verify(ctx context.Context, in *authv1.EmailServiceVerifyRequest) (*authv1.EmailServiceVerifyResponse, error) {
@@ -69,13 +72,13 @@ func (s *Server) Verify(ctx context.Context, in *authv1.EmailServiceVerifyReques
 		return nil, err
 	}
 
-	emailVerification, err := s.repo.GetEmailVerification(ctx, auth.Session.UserId)
+	emailVerification, err := s.repo.GetEmailVerification(ctx, auth.Session.UserID)
 	if err != nil {
 		return nil, err
 	}
 
 	if time.Now().After(emailVerification.ExpiresAt.Time) {
-		if err := s.repo.DeleteEmailVerification(ctx, auth.Session.UserId); err != nil {
+		if err := s.repo.DeleteEmailVerification(ctx, auth.Session.UserID); err != nil {
 			return nil, errors.DBError
 		}
 
@@ -86,12 +89,12 @@ func (s *Server) Verify(ctx context.Context, in *authv1.EmailServiceVerifyReques
 		return nil, errors.BadRequest
 	}
 
-	err = s.repo.VerifyEmail(ctx, auth.Session.UserId)
+	err = s.repo.VerifyEmail(ctx, auth.Session.UserID)
 	if err != nil {
 		return nil, err
 	}
 
-	session, err := s.service.CreateSession(ctx, auth.Session.UserId, false)
+	session, err := s.service.CreateSession(ctx, auth.Session.UserID, false)
 	if err != nil {
 		return nil, err
 	}

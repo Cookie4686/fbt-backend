@@ -1,14 +1,16 @@
+// Package webauthn for webauthn-related services (passkey, fido)
 package webauthn
 
 import (
 	"context"
 	"net/http"
 
-	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/interceptor"
+
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
 
 	"connectrpc.com/connect"
 )
@@ -48,7 +50,7 @@ func (s *Server) CreateUserPasskey(ctx context.Context, in *authv1.WebAuthnServi
 	}
 
 	credential := &model.WebAuthnCredential{
-		UserID:       auth.Session.UserId,
+		UserID:       auth.Session.UserID,
 		RpID:         in.Credential.RpId,
 		CredentialID: in.Credential.CredentialId,
 		PublicKey:    in.Credential.PublicKey,

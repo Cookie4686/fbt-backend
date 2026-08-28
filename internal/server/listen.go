@@ -2,10 +2,11 @@
 package server
 
 import (
-	"fbt/backend/internal/util"
 	"log"
 	"net"
 	"net/http"
+
+	"fbt/backend/internal/util"
 
 	"go.uber.org/zap"
 )

@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
+	"log"
+
 	"fbt/backend/internal/server"
 	"fbt/backend/internal/util"
-
-	"log"
 )
 
 func main() {

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/util"

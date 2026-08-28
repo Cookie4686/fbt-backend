@@ -1,14 +1,16 @@
+// Package account for account management service (Chart of Accounts)
 package account
 
 import (
 	"context"
 	"net/http"
 
-	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
 	"fbt/backend/gen/proto/go/bookkeeping/v1/bookkeepingv1connect"
 	"fbt/backend/internal/domain/bookkeeping/model"
 	"fbt/backend/internal/domain/bookkeeping/service"
 	"fbt/backend/internal/interceptor"
+
+	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
 
 	"connectrpc.com/connect"
 )
@@ -35,7 +37,7 @@ func (c *con) GetAll(ctx context.Context, in *bookkeepingv1.AccountServiceGetAll
 		return nil, err
 	}
 
-	accs, err := c.repo.GetAll(ctx, auth.Session.UserId)
+	accs, err := c.repo.GetAll(ctx, auth.Session.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +62,7 @@ func (c *con) Create(ctx context.Context, in *bookkeepingv1.AccountServiceCreate
 	account := &model.Account{
 		Name:    in.Name,
 		IsDebit: in.IsDebit,
-		UserId:  auth.Session.UserId,
+		UserID:  auth.Session.UserID,
 	}
 
 	accountID, err := c.repo.Create(ctx, account)
@@ -86,7 +88,7 @@ func (c *con) Update(ctx context.Context, in *bookkeepingv1.AccountServiceUpdate
 		ID:      in.Id,
 		Name:    in.Name,
 		IsDebit: in.IsDebit,
-		UserId:  auth.Session.UserId,
+		UserID:  auth.Session.UserID,
 	}
 
 	err = c.repo.Update(ctx, account)
@@ -106,7 +108,7 @@ func (c *con) Delete(ctx context.Context, in *bookkeepingv1.AccountServiceDelete
 		return nil, err
 	}
 
-	err = c.repo.Delete(ctx, auth.Session.UserId, in.Id)
+	err = c.repo.Delete(ctx, auth.Session.UserID, in.Id)
 	if err != nil {
 		return nil, err
 	}

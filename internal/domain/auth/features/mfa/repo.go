@@ -2,6 +2,7 @@ package mfa
 
 import (
 	"context"
+
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/util"
@@ -13,7 +14,7 @@ import (
 type Repo interface {
 	GetMFAList(ctx context.Context, userID string) (*model.MfaList, error)
 	GetTOTP(ctx context.Context, userID string) (*model.MfaTotp, error)
-	UpsertTOTP(ctx context.Context, key string, userID string) error
+	UpsertTOTP(ctx context.Context, key, userID string) error
 }
 
 type repo struct {
@@ -66,7 +67,7 @@ func (s *repo) GetTOTP(ctx context.Context, userID string) (*model.MfaTotp, erro
 	return totp, nil
 }
 
-func (s *repo) UpsertTOTP(ctx context.Context, key string, userID string) error {
+func (s *repo) UpsertTOTP(ctx context.Context, key, userID string) error {
 	query := `
 		INSERT INTO mfa_totp(key, user_id)
 		VALUES (@key, @user_id)

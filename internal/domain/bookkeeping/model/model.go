@@ -1,8 +1,10 @@
+// Package model for bookkeeping-related database schema
 package model
 
 import (
-	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
 	"time"
+
+	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -11,7 +13,7 @@ type Account struct {
 	ID      int32  `db:"account_id" json:"id"`
 	Name    string `db:"name"       json:"name"`
 	IsDebit bool   `db:"is_debit"   json:"is_debit"`
-	UserId  string `db:"user_id"    json:"user_id"`
+	UserID  string `db:"user_id"    json:"user_id"`
 }
 
 func (a *Account) ToProto() *bookkeepingv1.Account {
@@ -19,7 +21,7 @@ func (a *Account) ToProto() *bookkeepingv1.Account {
 		Id:      a.ID,
 		Name:    a.Name,
 		IsDebit: a.IsDebit,
-		UserId:  a.UserId,
+		UserId:  a.UserID,
 	}
 }
 

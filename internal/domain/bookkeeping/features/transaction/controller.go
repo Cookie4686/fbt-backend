@@ -1,14 +1,16 @@
+// Package transaction for transaction services (General Journal)
 package transaction
 
 import (
 	"context"
 	"net/http"
 
-	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
 	"fbt/backend/gen/proto/go/bookkeeping/v1/bookkeepingv1connect"
 	"fbt/backend/internal/domain/bookkeeping/model"
 	"fbt/backend/internal/domain/bookkeeping/service"
 	"fbt/backend/internal/interceptor"
+
+	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
 
 	"connectrpc.com/connect"
 )
@@ -32,7 +34,7 @@ func (c *con) GetAll(ctx context.Context, in *bookkeepingv1.TransactionServiceGe
 		return nil, err
 	}
 
-	tes, err := c.repo.GetAll(ctx, auth.Session.UserId)
+	tes, err := c.repo.GetAll(ctx, auth.Session.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +84,7 @@ func (c *con) Delete(ctx context.Context, in *bookkeepingv1.TransactionServiceDe
 		return nil, err
 	}
 
-	err = c.repo.Delete(ctx, auth.Session.UserId, in.Id)
+	err = c.repo.Delete(ctx, auth.Session.UserID, in.Id)
 	if err != nil {
 		return nil, err
 	}

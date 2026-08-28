@@ -1,3 +1,4 @@
+// Package interceptor for server interceptor (middleware)
 package interceptor
 
 import (

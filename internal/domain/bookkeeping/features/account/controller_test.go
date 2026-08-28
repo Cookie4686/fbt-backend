@@ -4,12 +4,13 @@ import (
 	"slices"
 	"testing"
 
-	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
-	authService "fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/domain/bookkeeping/features/account"
 	"fbt/backend/internal/domain/bookkeeping/model"
 	"fbt/backend/internal/domain/bookkeeping/service"
 	"fbt/backend/internal/test"
+
+	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
+	authService "fbt/backend/internal/domain/auth/service"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,9 +24,9 @@ func TestAccount(t *testing.T) {
 	controller := account.NewController(service.NewService(d), account.NewRepo(d.DB))
 
 	accounts := []model.Account{
-		{Name: "Cash", IsDebit: true, UserId: session.UserId},
-		{Name: "Bank-1", IsDebit: true, UserId: session.UserId},
-		{Name: "Loan-1", IsDebit: false, UserId: session.UserId},
+		{Name: "Cash", IsDebit: true, UserID: session.UserId},
+		{Name: "Bank-1", IsDebit: true, UserID: session.UserId},
+		{Name: "Loan-1", IsDebit: false, UserID: session.UserId},
 	}
 
 	t.Run("Get All (Empty)", func(t *testing.T) {
@@ -114,7 +115,7 @@ func protoToModel(accs []*bookkeepingv1.Account) []model.Account {
 			ID:      a.Id,
 			Name:    a.Name,
 			IsDebit: a.IsDebit,
-			UserId:  a.UserId,
+			UserID:  a.UserId,
 		}
 	}
 
