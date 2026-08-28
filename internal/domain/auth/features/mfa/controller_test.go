@@ -4,10 +4,11 @@ import (
 	"testing"
 	"time"
 
-	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/internal/domain/auth/features/mfa"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/test"
+
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
 
 	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"

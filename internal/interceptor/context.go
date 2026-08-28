@@ -11,9 +11,9 @@ import (
 
 var sessionIDKey = "session_id"
 
-func NewTokenContext(ctx context.Context, sessionId string) context.Context {
+func NewTokenContext(ctx context.Context, sessionID string) context.Context {
 	ctx, callInfo := connect.NewClientContext(ctx)
-	callInfo.RequestHeader().Set(sessionIDKey, sessionId)
+	callInfo.RequestHeader().Set(sessionIDKey, sessionID)
 
 	return ctx
 }

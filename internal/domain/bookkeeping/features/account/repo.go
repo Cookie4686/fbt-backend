@@ -2,6 +2,7 @@ package account
 
 import (
 	"context"
+
 	"fbt/backend/internal/domain/bookkeeping/model"
 	"fbt/backend/internal/util"
 
@@ -45,12 +46,12 @@ func (s repo) Create(ctx context.Context, account *model.Account) (accountID int
 	args := pgx.NamedArgs{
 		"name":     account.Name,
 		"is_debit": account.IsDebit,
-		"user_id":  account.UserId,
+		"user_id":  account.UserID,
 	}
 
 	err = s.db.QueryRow(ctx, query, args).Scan(&accountID)
 
-	return
+	return accountID, err
 }
 
 func (s *repo) Update(ctx context.Context, account *model.Account) error {
@@ -64,7 +65,7 @@ func (s *repo) Update(ctx context.Context, account *model.Account) error {
 		"account_id": account.ID,
 		"name":       account.Name,
 		"is_debit":   account.IsDebit,
-		"user_id":    account.UserId,
+		"user_id":    account.UserID,
 	}
 
 	_, err := s.db.Exec(ctx, query, args)

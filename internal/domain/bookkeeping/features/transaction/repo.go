@@ -2,9 +2,10 @@ package transaction
 
 import (
 	"context"
-	"fbt/backend/internal/domain/bookkeeping/model"
 	"log"
 	"slices"
+
+	"fbt/backend/internal/domain/bookkeeping/model"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -158,5 +159,5 @@ func (s *repo) createEntries(ctx context.Context, transactionID int64, entries [
 		}),
 	)
 
-	return
+	return count, err
 }

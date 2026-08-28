@@ -3,10 +3,12 @@ package health
 
 import (
 	"context"
-	healthv1 "fbt/backend/gen/proto/go/health/v1"
+	"net/http"
+
 	"fbt/backend/gen/proto/go/health/v1/healthv1connect"
 	"fbt/backend/internal/util"
-	"net/http"
+
+	healthv1 "fbt/backend/gen/proto/go/health/v1"
 
 	"connectrpc.com/connect"
 )

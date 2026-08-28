@@ -3,13 +3,14 @@ package transaction_test
 import (
 	"testing"
 
-	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
-	authService "fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/domain/bookkeeping/features/account"
 	"fbt/backend/internal/domain/bookkeeping/features/transaction"
 	"fbt/backend/internal/domain/bookkeeping/model"
 	"fbt/backend/internal/domain/bookkeeping/service"
 	"fbt/backend/internal/test"
+
+	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
+	authService "fbt/backend/internal/domain/auth/service"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

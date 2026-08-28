@@ -4,11 +4,12 @@ import (
 	"context"
 	"net/http"
 
-	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/interceptor"
+
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
 
 	"connectrpc.com/connect"
 )
@@ -49,7 +50,7 @@ func (s *Server) Logout(ctx context.Context, in *authv1.SessionServiceLogoutRequ
 		return nil, err
 	}
 
-	err = s.service.InvalidateSession(ctx, &model.Session{Id: auth.Session.Id})
+	err = s.service.InvalidateSession(ctx, &model.Session{ID: auth.Session.ID})
 	if err != nil {
 		return nil, err
 	}

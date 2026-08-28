@@ -1,24 +1,23 @@
+// Package oauth for oauth-related authentication
 package oauth
 
 import (
 	"context"
-	"crypto/rand"
 	"encoding/base64"
 	"net/http"
 	"time"
 
-	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
-	"fbt/backend/internal/domain/auth/config"
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/interceptor"
 	"fbt/backend/internal/util"
 
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
+
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5/pgtype"
-	"golang.org/x/crypto/argon2"
 )
 
 const OAuthRegistrationMaxAge = 15 * time.Minute
@@ -56,7 +55,7 @@ func (s *Server) Register(ctx context.Context, in *authv1.OAuthServiceRegisterRe
 	}
 
 	user := &model.User{
-		Id:              util.GenerateBase32UUID(),
+		ID:              util.GenerateBase32UUID(),
 		Username:        in.Username,
 		Email:           in.Email,
 		EmailVerified:   oauthRegistration.EmailVerified,
@@ -65,14 +64,13 @@ func (s *Server) Register(ctx context.Context, in *authv1.OAuthServiceRegisterRe
 		PasswordEnabled: in.PasswordEnabled,
 	}
 	if in.PasswordEnabled {
-		salt := make([]byte, config.PasswordSaltSize)
-		rand.Read(salt)
-		passwordHash := argon2.IDKey([]byte(in.Password), salt, config.IdKeyTime, config.IdKeyMemory, config.IdKeyThread, config.IdKeyLen)
+		salt := s.service.GenerateSalt()
+		passwordHash := s.service.HashPassword(in.Password, salt)
 		user.Password = pgtype.Text{String: base64.StdEncoding.EncodeToString(passwordHash), Valid: true}
 		user.PasswordSalt = pgtype.Text{String: base64.StdEncoding.EncodeToString(salt), Valid: true}
 	}
 
-	session := model.NewSession(user.Id, false)
+	session := model.NewSession(user.ID, false)
 
 	err = s.repo.OAuthRegister(ctx, in.RegistrationId, user, session)
 	if err != nil {
@@ -109,9 +107,9 @@ func (s *Server) Login(ctx context.Context, in *authv1.OAuthServiceLoginRequest)
 
 		if err != errors.NotFound {
 			// Link OAuth to existing email
-			session := model.NewSession(user.Id, false)
+			session := model.NewSession(user.ID, false)
 
-			err = s.repo.LinkOAuth(ctx, in.Provider, user.Id, in.Token, session)
+			err = s.repo.LinkOAuth(ctx, in.Provider, user.ID, in.Token, session)
 			if err != nil {
 				return nil, err
 			}
@@ -151,7 +149,7 @@ func (s *Server) Status(ctx context.Context, in *authv1.OAuthServiceStatusReques
 		return nil, err
 	}
 
-	providers, err := s.repo.GetUserProvider(ctx, auth.User.Id)
+	providers, err := s.repo.GetUserProvider(ctx, auth.User.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -168,9 +166,9 @@ func (s *Server) Link(ctx context.Context, in *authv1.OAuthServiceLinkRequest) (
 		return nil, err
 	}
 
-	session := model.NewSession(auth.Session.UserId, true)
+	session := model.NewSession(auth.Session.UserID, true)
 
-	err = s.repo.LinkOAuth(ctx, in.Provider, auth.User.Id, in.Token, session)
+	err = s.repo.LinkOAuth(ctx, in.Provider, auth.User.ID, in.Token, session)
 	if err != nil {
 		return nil, err
 	}
@@ -187,12 +185,12 @@ func (s *Server) Unlink(ctx context.Context, in *authv1.OAuthServiceUnlinkReques
 		return nil, err
 	}
 
-	err = s.repo.UnLinkOAuth(ctx, in.Provider, auth.User.Id)
+	err = s.repo.UnLinkOAuth(ctx, in.Provider, auth.User.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	session, err := s.service.CreateSession(ctx, auth.User.Id, true)
+	session, err := s.service.CreateSession(ctx, auth.User.ID, true)
 	if err != nil {
 		return nil, err
 	}

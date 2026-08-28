@@ -1,3 +1,4 @@
+// Package errors for hiding internal error
 package errors
 
 import (

@@ -3,10 +3,12 @@ package test
 import (
 	"testing"
 
-	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/internal/domain/auth/features/credentials"
-	authService "fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/util"
+
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
+
+	authService "fbt/backend/internal/domain/auth/service"
 
 	"github.com/stretchr/testify/require"
 )

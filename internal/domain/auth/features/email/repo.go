@@ -2,6 +2,7 @@ package email
 
 import (
 	"context"
+
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/util"
 

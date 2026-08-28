@@ -6,8 +6,10 @@ import (
 	"encoding/base64"
 )
 
-const base32BitEntropy = 15
-const base64BitEntropy = 18
+const (
+	base32BitEntropy = 15
+	base64BitEntropy = 18
+)
 
 func GenerateBase32UUID() string {
 	bytes := make([]byte, base32BitEntropy)

@@ -1,6 +1,9 @@
+// Package auth for registering authentication-related features
 package auth
 
 import (
+	"net/http"
+
 	"fbt/backend/internal/domain/auth/features/credentials"
 	"fbt/backend/internal/domain/auth/features/email"
 	"fbt/backend/internal/domain/auth/features/mfa"
@@ -9,7 +12,6 @@ import (
 	"fbt/backend/internal/domain/auth/features/webauthn"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/util"
-	"net/http"
 
 	"connectrpc.com/connect"
 )

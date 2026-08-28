@@ -1,11 +1,13 @@
+// Package bookkeeping for registering bookkeeping features
 package bookkeeping
 
 import (
+	"net/http"
+
 	"fbt/backend/internal/domain/bookkeeping/features/account"
 	"fbt/backend/internal/domain/bookkeeping/features/transaction"
 	"fbt/backend/internal/domain/bookkeeping/service"
 	"fbt/backend/internal/util"
-	"net/http"
 
 	"connectrpc.com/connect"
 )

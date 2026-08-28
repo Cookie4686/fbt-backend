@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"context"
+
 	"fbt/backend/internal/domain/auth/model"
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/util"
@@ -19,17 +20,17 @@ func NewRepo(db *pgxpool.Pool) Repo {
 }
 
 type Repo interface {
-	GetUserOAuth(ctx context.Context, provider string, idToken string) (*model.UserOAuth, error)
-	LinkOAuth(ctx context.Context, provider string, userID string, idToken string, session *model.Session) error
-	UnLinkOAuth(ctx context.Context, provider string, userID string) error
+	GetUserOAuth(ctx context.Context, provider, idToken string) (*model.UserOAuth, error)
+	LinkOAuth(ctx context.Context, provider, userID, idToken string, session *model.Session) error
+	UnLinkOAuth(ctx context.Context, provider, userID string) error
 	CreateOAuthRegistration(ctx context.Context, provider string, oauthRegistration *model.OauthRegistration) error
-	GetOAuthRegistration(ctx context.Context, registrationId string) (*model.OauthRegistration, error)
-	DeleteOAuthRegistration(ctx context.Context, provider string, idToken string) error
-	OAuthRegister(ctx context.Context, registrationId string, user *model.User, session *model.Session) error
+	GetOAuthRegistration(ctx context.Context, registrationID string) (*model.OauthRegistration, error)
+	DeleteOAuthRegistration(ctx context.Context, provider, idToken string) error
+	OAuthRegister(ctx context.Context, registrationID string, user *model.User, session *model.Session) error
 	GetUserProvider(ctx context.Context, userID string) ([]string, error)
 }
 
-func (s *repo) GetUserOAuth(ctx context.Context, provider string, idToken string) (*model.UserOAuth, error) {
+func (s *repo) GetUserOAuth(ctx context.Context, provider, idToken string) (*model.UserOAuth, error) {
 	query := `
 		SELECT user_oauth.* FROM user_oauth
 		LEFT JOIN oauth_providers ON user_oauth.oauth_provider_id = oauth_providers.oauth_provider_id
@@ -49,7 +50,7 @@ func (s *repo) GetUserOAuth(ctx context.Context, provider string, idToken string
 	return userOAuth, err
 }
 
-func (s *repo) LinkOAuth(ctx context.Context, provider string, userID string, idToken string, session *model.Session) error {
+func (s *repo) LinkOAuth(ctx context.Context, provider, userID, idToken string, session *model.Session) error {
 	batch := &pgx.Batch{}
 	batch.Queue(`
 		INSERT INTO user_oauth(user_id, oauth_provider_id, id_token)
@@ -69,8 +70,8 @@ func (s *repo) LinkOAuth(ctx context.Context, provider string, userID string, id
 		VALUES (@sessionId, @userId, @createdAt, @expiresAt, @twoFactorVerified)
 	`,
 		pgx.NamedArgs{
-			"sessionId":         session.Id,
-			"userId":            session.UserId,
+			"sessionId":         session.ID,
+			"userId":            session.UserID,
 			"createdAt":         session.CreatedAt,
 			"expiresAt":         session.ExpiresAt,
 			"twoFactorVerified": session.TwoFactorVerified,
@@ -81,7 +82,7 @@ func (s *repo) LinkOAuth(ctx context.Context, provider string, userID string, id
 	return err
 }
 
-func (s *repo) UnLinkOAuth(ctx context.Context, provider string, userID string) error {
+func (s *repo) UnLinkOAuth(ctx context.Context, provider, userID string) error {
 	query := `
 		DELETE FROM user_oauth
 		WHERE user_oauth.oauth_provider_id = (
@@ -121,13 +122,13 @@ func (s *repo) CreateOAuthRegistration(ctx context.Context, provider string, oau
 	return err
 }
 
-func (s *repo) GetOAuthRegistration(ctx context.Context, registrationId string) (*model.OauthRegistration, error) {
+func (s *repo) GetOAuthRegistration(ctx context.Context, registrationID string) (*model.OauthRegistration, error) {
 	query := `
 		SELECT * FROM oauth_registration
 		WHERE registration_id = @registration_id
 		ORDER BY expires_at DESC
 	`
-	args := pgx.NamedArgs{"registration_id": registrationId}
+	args := pgx.NamedArgs{"registration_id": registrationID}
 
 	OAuthRegistration, err := util.FetchOne[model.OauthRegistration](s.db, ctx, query, args)
 	if err != nil {
@@ -141,7 +142,7 @@ func (s *repo) GetOAuthRegistration(ctx context.Context, registrationId string) 
 	return OAuthRegistration, nil
 }
 
-func (s *repo) DeleteOAuthRegistration(ctx context.Context, provider string, idToken string) error {
+func (s *repo) DeleteOAuthRegistration(ctx context.Context, provider, idToken string) error {
 	query := `
 		DELETE FROM oauth_registration
 		WHERE oauth_provider_id = 
@@ -157,14 +158,14 @@ func (s *repo) DeleteOAuthRegistration(ctx context.Context, provider string, idT
 	return err
 }
 
-func (s *repo) OAuthRegister(ctx context.Context, registrationId string, user *model.User, session *model.Session) error {
+func (s *repo) OAuthRegister(ctx context.Context, registrationID string, user *model.User, session *model.Session) error {
 	batch := &pgx.Batch{}
 	batch.Queue(`
 		INSERT INTO users(user_id, username, email, email_verified, password, password_salt, password_enabled)
 		VALUES (@userId, @username, @email, @emailVerified, @password, @passwordSalt, @passwordEnabled)
 	`,
 		pgx.NamedArgs{
-			"userId":          user.Id,
+			"userId":          user.ID,
 			"username":        user.Username,
 			"email":           user.Email,
 			"emailVerified":   user.EmailVerified,
@@ -188,14 +189,14 @@ func (s *repo) OAuthRegister(ctx context.Context, registrationId string, user *m
 			@user_id
 		)
 	`,
-		pgx.NamedArgs{"user_id": user.Id, "registration_id": registrationId},
+		pgx.NamedArgs{"user_id": user.ID, "registration_id": registrationID},
 	)
 
 	batch.Queue(`
 		DELETE FROM oauth_registration
 		WHERE registration_id = @registration_id
 	`,
-		pgx.NamedArgs{"registration_id": registrationId},
+		pgx.NamedArgs{"registration_id": registrationID},
 	)
 
 	batch.Queue(`
@@ -203,8 +204,8 @@ func (s *repo) OAuthRegister(ctx context.Context, registrationId string, user *m
 		VALUES (@sessionId, @sessionUserId, @createdAt, @expiresAt, @twoFactorVerified);
 	`,
 		pgx.NamedArgs{
-			"sessionId":         session.Id,
-			"sessionUserId":     session.UserId,
+			"sessionId":         session.ID,
+			"sessionUserId":     session.UserID,
 			"createdAt":         session.CreatedAt,
 			"expiresAt":         session.ExpiresAt,
 			"twoFactorVerified": session.TwoFactorVerified,
@@ -230,7 +231,7 @@ func (s *repo) GetUserProvider(ctx context.Context, userID string) ([]string, er
 		return nil, err
 	}
 
-	var providers = make([]string, 0)
+	providers := make([]string, 0)
 
 	for rows.Next() {
 		var provider string

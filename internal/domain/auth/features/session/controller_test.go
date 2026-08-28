@@ -3,10 +3,11 @@ package session_test
 import (
 	"testing"
 
-	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/internal/domain/auth/features/session"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/test"
+
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

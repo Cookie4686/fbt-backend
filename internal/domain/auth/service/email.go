@@ -1,6 +1,6 @@
 package service
 
-func (s *service) SendVerificationMail(email string, otp string) error {
+func (s *service) SendVerificationMail(email, otp string) error {
 	// FIX: change mail service
 
 	// message := mail.NewMsg()

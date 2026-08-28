@@ -5,11 +5,12 @@ import (
 	"context"
 	"net/http"
 
-	authv1 "fbt/backend/gen/proto/go/auth/v1"
 	"fbt/backend/gen/proto/go/auth/v1/authv1connect"
 	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/errors"
 	"fbt/backend/internal/interceptor"
+
+	authv1 "fbt/backend/gen/proto/go/auth/v1"
 
 	"connectrpc.com/connect"
 	"github.com/pquerna/otp/totp"
@@ -37,7 +38,7 @@ func (s *con) Status(ctx context.Context, in *authv1.MFAServiceStatusRequest) (*
 		return nil, err
 	}
 
-	userMfaList, err := s.repo.GetMFAList(ctx, auth.User.Id)
+	userMfaList, err := s.repo.GetMFAList(ctx, auth.User.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +55,7 @@ func (s *con) TOTPValidate(ctx context.Context, in *authv1.MFAServiceTOTPValidat
 		return nil, err
 	}
 
-	userTotp, err := s.repo.GetTOTP(ctx, auth.User.Id)
+	userTotp, err := s.repo.GetTOTP(ctx, auth.User.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +69,7 @@ func (s *con) TOTPValidate(ctx context.Context, in *authv1.MFAServiceTOTPValidat
 		return nil, errors.BadRequest
 	}
 
-	session, err := s.service.CreateSession(ctx, auth.User.Id, true)
+	session, err := s.service.CreateSession(ctx, auth.User.ID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -92,12 +93,12 @@ func (s *con) TOTPUpsertKey(ctx context.Context, in *authv1.MFAServiceTOTPUpsert
 		return nil, err
 	}
 
-	err = s.repo.UpsertTOTP(ctx, *encryptedKey, auth.User.Id)
+	err = s.repo.UpsertTOTP(ctx, *encryptedKey, auth.User.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	session, err := s.service.CreateSession(ctx, auth.User.Id, true)
+	session, err := s.service.CreateSession(ctx, auth.User.ID, true)
 	if err != nil {
 		return nil, err
 	}

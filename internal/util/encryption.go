@@ -9,7 +9,7 @@ import (
 	"io"
 )
 
-func Decrypt(encryptedValue string, encryptionKey string) (*string, error) {
+func Decrypt(encryptedValue, encryptionKey string) (*string, error) {
 	key, err := base64.StdEncoding.DecodeString(encryptionKey)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func Decrypt(encryptedValue string, encryptionKey string) (*string, error) {
 	return &decryptedValue, nil
 }
 
-func Encrypt(value string, encryptionKey string) (*string, error) {
+func Encrypt(value, encryptionKey string) (*string, error) {
 	key, err := base64.StdEncoding.DecodeString(encryptionKey)
 	if err != nil {
 		return nil, err
