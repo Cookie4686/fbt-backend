@@ -52,9 +52,10 @@ func NewMailClient(cfg *Config) (*mail.Client, error) {
 	client, err := mail.NewClient(
 		cfg.MAIL.SERVER,
 		mail.WithPort(cfg.MAIL.PORT),
-		mail.WithSMTPAuth(mail.SMTPAuthPlain),
+		mail.WithSMTPAuth(mail.SMTPAuthAutoDiscover),
 		mail.WithUsername(cfg.MAIL.USERNAME),
 		mail.WithPassword(cfg.MAIL.PASSWORD),
+		mail.WithTLSPolicy(mail.TLSMandatory),
 	)
 	if err != nil {
 		return nil, err
