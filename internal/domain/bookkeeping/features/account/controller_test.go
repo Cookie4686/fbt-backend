@@ -10,7 +10,6 @@ import (
 	"fbt/backend/internal/test"
 
 	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
-	authService "fbt/backend/internal/domain/auth/service"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,10 +17,11 @@ import (
 
 func TestAccount(t *testing.T) {
 	d := test.Setup(t)
+	testUtil := test.NewTestUtil(d)
 
-	authService := authService.NewService(d)
-	session := test.SetupUser(t, d, authService)
 	controller := account.NewController(service.NewService(d), account.NewRepo(d.DB))
+
+	session := testUtil.SetupUser(t)
 
 	accounts := []model.Account{
 		{Name: "Cash", IsDebit: true, UserID: session.UserId},
@@ -30,7 +30,7 @@ func TestAccount(t *testing.T) {
 	}
 
 	t.Run("Get All (Empty)", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		res, err := controller.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
 		require.NoError(t, err)
@@ -39,7 +39,7 @@ func TestAccount(t *testing.T) {
 	})
 
 	t.Run("Create", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		for idx, a := range accounts {
 			res, err := controller.Create(ctx, &bookkeepingv1.AccountServiceCreateRequest{
@@ -53,7 +53,7 @@ func TestAccount(t *testing.T) {
 	})
 
 	t.Run("Get All", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		res, err := controller.GetAll(ctx, &bookkeepingv1.AccountServiceGetAllRequest{})
 		require.NoError(t, err)
@@ -68,7 +68,7 @@ func TestAccount(t *testing.T) {
 	updated.IsDebit = false
 
 	t.Run("Update", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		_, err := controller.Update(ctx, &bookkeepingv1.AccountServiceUpdateRequest{
 			Id:      updated.ID,
@@ -90,7 +90,7 @@ func TestAccount(t *testing.T) {
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		_, err := controller.Delete(ctx, &bookkeepingv1.AccountServiceDeleteRequest{
 			Id: updated.ID,

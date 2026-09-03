@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"fbt/backend/internal/domain/auth/features/mfa"
-	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/test"
 
 	authv1 "fbt/backend/gen/proto/go/auth/v1"
@@ -17,13 +16,14 @@ import (
 
 func TestMFA(t *testing.T) {
 	d := test.Setup(t)
-	service := service.NewService(d)
+	testUtil := test.NewTestUtil(d)
 
-	session := test.SetupUser(t, d, service)
-	client := mfa.NewController(service, mfa.NewRepo(d.DB))
+	client := mfa.NewController(testUtil.AuthService, mfa.NewRepo(d.DB))
+
+	session := testUtil.SetupUser(t)
 
 	t.Run("Status", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, service)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		res, err := client.Status(ctx, &authv1.MFAServiceStatusRequest{})
 		require.NoError(t, err)
@@ -35,7 +35,7 @@ func TestMFA(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("TOTP Upsert", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, service)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		res, err := client.TOTPUpsertKey(ctx, &authv1.MFAServiceTOTPUpsertKeyRequest{
 			Key: key.Secret(),
@@ -48,7 +48,7 @@ func TestMFA(t *testing.T) {
 	})
 
 	t.Run("TOTP Validate", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, service)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		code, err := totp.GenerateCode(key.Secret(), time.Now())
 		require.NoError(t, err)
@@ -64,7 +64,7 @@ func TestMFA(t *testing.T) {
 	})
 
 	t.Run("Status", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, service)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		res, err := client.Status(ctx, &authv1.MFAServiceStatusRequest{})
 		require.NoError(t, err)

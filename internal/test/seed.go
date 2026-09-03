@@ -1,9 +1,11 @@
 package test
 
 import (
+	"context"
 	"testing"
 
 	"fbt/backend/internal/domain/auth/features/credentials"
+	"fbt/backend/internal/interceptor"
 	"fbt/backend/internal/util"
 
 	authv1 "fbt/backend/gen/proto/go/auth/v1"
@@ -13,14 +15,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func SetupUser(t *testing.T, d *util.Dependency, service authService.Service) *authv1.Session {
-	if service == nil {
-		service = authService.NewService(d)
+type TestUtil struct {
+	AuthService           authService.Service
+	CredentialsController credentials.Controller
+}
+
+func NewTestUtil(d *util.Dependency) *TestUtil {
+	authService := authService.NewService(d)
+
+	return &TestUtil{
+		AuthService:           authService,
+		CredentialsController: *credentials.NewController(authService, credentials.NewRepo(d.DB)),
+	}
+}
+
+func (s *TestUtil) NewAuthContext(ctx context.Context, sessionID string) context.Context {
+	auth, err := s.AuthService.Validate(ctx, sessionID)
+	if err != nil {
+		return ctx
 	}
 
-	controller := credentials.NewController(service, credentials.NewRepo(d.DB))
+	return interceptor.NewAuthContext(ctx, auth)
+}
 
-	res, err := controller.Register(t.Context(), &authv1.CredentialServiceRegisterRequest{
+func (s *TestUtil) SetupUser(t *testing.T) *authv1.Session {
+	res, err := s.CredentialsController.Register(t.Context(), &authv1.CredentialServiceRegisterRequest{
 		Username: "test",
 		Email:    "test@email.com",
 		Password: "12345678",

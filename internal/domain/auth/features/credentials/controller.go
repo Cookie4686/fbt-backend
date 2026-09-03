@@ -19,7 +19,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type con struct {
+type Controller struct {
 	service service.Service
 	repo    Repo
 }
@@ -28,11 +28,11 @@ func NewServiceHandler(service service.Service, repo Repo, opts ...connect.Handl
 	return authv1connect.NewCredentialServiceHandler(NewController(service, repo), opts...)
 }
 
-func NewController(service service.Service, repo Repo) *con {
-	return &con{service, repo}
+func NewController(service service.Service, repo Repo) *Controller {
+	return &Controller{service, repo}
 }
 
-func (s *con) Register(ctx context.Context, in *authv1.CredentialServiceRegisterRequest) (*authv1.CredentialServiceRegisterResponse, error) {
+func (s *Controller) Register(ctx context.Context, in *authv1.CredentialServiceRegisterRequest) (*authv1.CredentialServiceRegisterResponse, error) {
 	salt := s.service.GenerateSalt()
 	passwordHash := s.service.HashPassword(in.Password, salt)
 
@@ -55,7 +55,7 @@ func (s *con) Register(ctx context.Context, in *authv1.CredentialServiceRegister
 	return &authv1.CredentialServiceRegisterResponse{Session: session.ToProto()}, nil
 }
 
-func (s *con) Login(ctx context.Context, in *authv1.CredentialServiceLoginRequest) (*authv1.CredentialServiceLoginResponse, error) {
+func (s *Controller) Login(ctx context.Context, in *authv1.CredentialServiceLoginRequest) (*authv1.CredentialServiceLoginResponse, error) {
 	// Get User Data From Database
 	user, err := s.service.GetUserByUsername(ctx, in.Username)
 	if err != nil {

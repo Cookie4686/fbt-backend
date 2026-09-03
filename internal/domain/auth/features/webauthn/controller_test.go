@@ -5,7 +5,6 @@ import (
 
 	"fbt/backend/internal/domain/auth/features/webauthn"
 	"fbt/backend/internal/domain/auth/model"
-	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/test"
 
 	authv1 "fbt/backend/gen/proto/go/auth/v1"
@@ -15,10 +14,11 @@ import (
 
 func TestWebAuthn(t *testing.T) {
 	d := test.Setup(t)
+	testUtil := test.NewTestUtil(d)
 
-	service := service.NewService(d)
-	session := test.SetupUser(t, d, service)
-	controller := webauthn.NewController(service, webauthn.NewRepo(d.DB))
+	controller := webauthn.NewController(testUtil.AuthService, webauthn.NewRepo(d.DB))
+
+	session := testUtil.SetupUser(t)
 
 	credential := &model.WebAuthnCredential{
 		RpID:           "localhost",
@@ -36,7 +36,7 @@ func TestWebAuthn(t *testing.T) {
 	}
 
 	t.Run("Create User Passkey", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, service)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 		res, err := controller.CreateUserPasskey(ctx, &authv1.WebAuthnServiceCreateUserPasskeyRequest{
 			Credential: &authv1.WebAuthnCredential{
 				RpId:         credential.RpID,
@@ -67,7 +67,7 @@ func TestWebAuthn(t *testing.T) {
 	})
 
 	t.Run("Update User Passkey Counter", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, service)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 		res, err := controller.UpdatePasskeyCounter(ctx, &authv1.WebAuthnServiceUpdatePasskeyCounterRequest{
 			RpId:         credential.RpID,
 			CredentialId: credential.CredentialID,

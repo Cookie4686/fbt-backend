@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"fbt/backend/internal/domain/auth/features/oauth"
-	"fbt/backend/internal/domain/auth/service"
 	"fbt/backend/internal/test"
 
 	authv1 "fbt/backend/gen/proto/go/auth/v1"
@@ -15,9 +14,9 @@ import (
 
 func TestOAuth(t *testing.T) {
 	d := test.Setup(t)
+	testUtil := test.NewTestUtil(d)
 
-	service := service.NewService(d)
-	controller := oauth.NewController(service, oauth.NewRepo(d.DB))
+	controller := oauth.NewController(testUtil.AuthService, oauth.NewRepo(d.DB))
 
 	var registrationID string
 
@@ -57,7 +56,7 @@ func TestOAuth(t *testing.T) {
 	})
 
 	t.Run("Status", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, service)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		res, err := controller.Status(ctx, &authv1.OAuthServiceStatusRequest{})
 		require.NoError(t, err)

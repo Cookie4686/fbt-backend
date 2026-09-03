@@ -10,7 +10,6 @@ import (
 	"fbt/backend/internal/test"
 
 	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
-	authService "fbt/backend/internal/domain/auth/service"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,18 +18,18 @@ import (
 
 func TestTransaction(t *testing.T) {
 	d := test.Setup(t)
+	testUtil := test.NewTestUtil(d)
+	session := testUtil.SetupUser(t)
 
-	authService := authService.NewService(d)
 	service := service.NewService(d)
 	accController := account.NewController(service, account.NewRepo(d.DB))
 	controller := transaction.NewController(service, transaction.NewRepo(d.DB))
-	session := test.SetupUser(t, d, nil)
 
 	cash := model.Account{Name: "Cash", IsDebit: true}
 	loan := model.Account{Name: "Loan", IsDebit: false}
 
 	for _, a := range []*model.Account{&cash, &loan} {
-		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		res, err := accController.Create(ctx, &bookkeepingv1.AccountServiceCreateRequest{
 			Name:    a.Name,
@@ -42,7 +41,7 @@ func TestTransaction(t *testing.T) {
 	}
 
 	t.Run("GetAll (empty)", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		res, err := controller.GetAll(ctx, &bookkeepingv1.TransactionServiceGetAllRequest{})
 		require.NoError(t, err)
@@ -51,7 +50,7 @@ func TestTransaction(t *testing.T) {
 	})
 
 	t.Run("Create", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		res, err := controller.Create(ctx, &bookkeepingv1.TransactionServiceCreateRequest{
 			Time: timestamppb.Now(),
@@ -66,7 +65,7 @@ func TestTransaction(t *testing.T) {
 	})
 
 	t.Run("GetAll", func(t *testing.T) {
-		ctx := test.NewAuthContext(t.Context(), session.Id, authService)
+		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		res, err := controller.GetAll(ctx, &bookkeepingv1.TransactionServiceGetAllRequest{})
 		require.NoError(t, err)
