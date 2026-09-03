@@ -20,14 +20,20 @@ message TransactionServiceGetAllResponse {
 
 message TransactionServiceCreateRequest {
   google.protobuf.Timestamp time = 1 [(buf.validate.field).required = true];
-  repeated Entry entries = 2 [(buf.validate.field).required = true];
+  string description = 2;
+  string note = 3;
+  repeated Entry entries = 4 [(buf.validate.field).required = true];
 }
 message TransactionServiceCreateResponse {
   TransactionEntry transaction_entry = 1 [(buf.validate.field).required = true];
 }
 
 message TransactionServiceUpdateRequest {
-  TransactionEntry transaction_entry = 1 [(buf.validate.field).required = true];
+  int64 id = 1;
+  google.protobuf.Timestamp time = 2;
+  string description = 3;
+  string note = 4;
+  repeated Entry entries = 5 [(buf.validate.field).required = true];
 }
 message TransactionServiceUpdateResponse {
   TransactionEntry transaction_entry = 1 [(buf.validate.field).required = true];

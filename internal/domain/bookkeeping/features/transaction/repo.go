@@ -2,7 +2,6 @@ package transaction
 
 import (
 	"context"
-	"log"
 	"slices"
 
 	"fbt/backend/internal/domain/bookkeeping/model"
@@ -17,8 +16,8 @@ type repo struct {
 
 type Repo interface {
 	GetAll(ctx context.Context, userID string) (*[]model.TransactionEntry, error)
-	Create(context.Context, *model.TransactionEntry) (transactionID int64, err error)
-	Update(context.Context, *model.TransactionEntry) error
+	Create(ctx context.Context, transaction model.Transaction, entries []model.Entry) (transactionID int64, err error)
+	Update(ctx context.Context, transaction model.Transaction, entries []model.Entry) error
 	Delete(ctx context.Context, userID string, transactionID int64) error
 }
 
@@ -33,7 +32,7 @@ type GetAllRow struct {
 
 func (s repo) GetAll(ctx context.Context, userID string) (*[]model.TransactionEntry, error) {
 	query := `
-		SELECT transactions.transaction_id, transactions.datetime, entries.account_id, entries.amount
+		SELECT transactions.transaction_id, transactions.datetime, transactions.description, transactions.note, entries.account_id, entries.amount
 		FROM accounts
 		JOIN entries ON entries.account_id = accounts.account_id
 		JOIN transactions ON transactions.transaction_id = entries.transaction_id
@@ -56,6 +55,8 @@ func (s repo) GetAll(ctx context.Context, userID string) (*[]model.TransactionEn
 		if err := rows.Scan(
 			&i.TransactionID,
 			&i.Datetime,
+			&i.Description,
+			&i.Note,
 			&i.AccountID,
 			&i.Amount,
 		); err != nil {
@@ -69,6 +70,8 @@ func (s repo) GetAll(ctx context.Context, userID string) (*[]model.TransactionEn
 				Transaction: model.Transaction{
 					TransactionID: i.TransactionID,
 					Datetime:      i.Datetime,
+					Description:   i.Description,
+					Note:          i.Note,
 				},
 				Entries: []model.Entry{
 					{AccountID: i.AccountID, Amount: i.Amount},
@@ -85,22 +88,24 @@ func (s repo) GetAll(ctx context.Context, userID string) (*[]model.TransactionEn
 	return &te, nil
 }
 
-func (s repo) Create(ctx context.Context, te *model.TransactionEntry) (transactionID int64, err error) {
-	log.Print(te.Datetime)
-
+func (s repo) Create(ctx context.Context, transaction model.Transaction, entries []model.Entry) (transactionID int64, err error) {
 	query := `
-		INSERT INTO transactions(datetime)
-		VALUES (@datetime)
+		INSERT INTO transactions(datetime, description, note)
+		VALUES (@datetime, @description, @note)
 		RETURNING transaction_id
 	`
-	args := pgx.NamedArgs{"datetime": te.Datetime}
+	args := pgx.NamedArgs{
+		"datetime":    transaction.Datetime,
+		"description": transaction.Description,
+		"note":        transaction.Note,
+	}
 
 	err = s.db.QueryRow(ctx, query, args).Scan(&transactionID)
 	if err != nil {
 		return transactionID, err
 	}
 
-	_, err = s.createEntries(ctx, transactionID, te.Entries)
+	_, err = s.createEntries(ctx, transactionID, entries)
 	if err != nil {
 		return transactionID, err
 	}
@@ -108,30 +113,41 @@ func (s repo) Create(ctx context.Context, te *model.TransactionEntry) (transacti
 	return transactionID, nil
 }
 
-func (s *repo) Update(ctx context.Context, te *model.TransactionEntry) error {
+func (s *repo) Update(ctx context.Context, transaction model.Transaction, entries []model.Entry) error {
 	batch := &pgx.Batch{}
 	batch.Queue(`
-		UPDATE transactions
-		SET datetime = @datetime
+		UPDATE transactions SET
+			datetime = @datetime,
+			description = @description,
+			note = @note
 		WHERE transaction_id = @transaction_id
 	`,
-		pgx.NamedArgs{"@transaction_id": te.TransactionID},
+		pgx.NamedArgs{
+			"transaction_id": transaction.TransactionID,
+			"description":    transaction.Description,
+			"note":           transaction.Note,
+		},
 	)
-	batch.Queue(`
+
+	if len(entries) != 0 {
+		batch.Queue(`
 		DELETE entries
 		WHERE transaction_id = @transaction_id
 	`,
-		pgx.NamedArgs{"@transaction_id": te.TransactionID},
-	)
+			pgx.NamedArgs{"transaction_id": transaction.TransactionID},
+		)
+	}
 
 	_, err := s.db.SendBatch(ctx, batch).Exec()
 	if err != nil {
 		return err
 	}
 
-	_, err = s.createEntries(ctx, te.TransactionID, te.Entries)
-	if err != nil {
-		return err
+	if len(entries) != 0 {
+		_, err = s.createEntries(ctx, transaction.TransactionID, entries)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -6,11 +6,13 @@ import (
 
 	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Account struct {
 	ID      int32  `db:"account_id" json:"id"`
+	Code    string `db:"code"       json:"code"`
 	Name    string `db:"name"       json:"name"`
 	IsDebit bool   `db:"is_debit"   json:"is_debit"`
 	UserID  string `db:"user_id"    json:"user_id"`
@@ -19,6 +21,7 @@ type Account struct {
 func (a *Account) ToProto() *bookkeepingv1.Account {
 	return &bookkeepingv1.Account{
 		Id:      a.ID,
+		Code:    a.Code,
 		Name:    a.Name,
 		IsDebit: a.IsDebit,
 		UserId:  a.UserID,
@@ -38,8 +41,10 @@ type AccountTag struct {
 }
 
 type Transaction struct {
-	TransactionID int64     `db:"transaction_id" json:"transaction_id"`
-	Datetime      time.Time `db:"datetime"       json:"datetime"`
+	TransactionID int64       `db:"transaction_id" json:"transaction_id"`
+	Description   pgtype.Text `db:"description"    json:"description"`
+	Note          pgtype.Text `db:"note"           json:"note"`
+	Datetime      time.Time   `db:"datetime"       json:"datetime"`
 }
 
 type Entry struct {
@@ -65,8 +70,10 @@ func (te *TransactionEntry) ToProto() *bookkeepingv1.TransactionEntry {
 	}
 
 	return &bookkeepingv1.TransactionEntry{
-		Id:      te.TransactionID,
-		Time:    timestamppb.New(te.Datetime),
-		Entries: entries,
+		Id:          te.TransactionID,
+		Description: te.Description.String,
+		Note:        te.Note.String,
+		Time:        timestamppb.New(te.Datetime),
+		Entries:     entries,
 	}
 }

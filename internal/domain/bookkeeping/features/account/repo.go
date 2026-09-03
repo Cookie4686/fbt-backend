@@ -39,11 +39,12 @@ func (s repo) GetAll(ctx context.Context, userID string) (*[]model.Account, erro
 
 func (s repo) Create(ctx context.Context, account *model.Account) (accountID int32, err error) {
 	query := `
-		INSERT INTO accounts(name, is_debit, user_id)
-		VALUES (@name, @is_debit, @user_id)
+		INSERT INTO accounts(code, name, is_debit, user_id)
+		VALUES (@code, @name, @is_debit, @user_id)
 		RETURNING account_id
 	`
 	args := pgx.NamedArgs{
+		"code":     account.Code,
 		"name":     account.Name,
 		"is_debit": account.IsDebit,
 		"user_id":  account.UserID,
@@ -57,12 +58,14 @@ func (s repo) Create(ctx context.Context, account *model.Account) (accountID int
 func (s *repo) Update(ctx context.Context, account *model.Account) error {
 	query := `
 		UPDATE accounts SET
+			code = @code,
 			name = @name,
 			is_debit = @is_debit
 		WHERE account_id = @account_id AND user_id = @user_id
 	`
 	args := pgx.NamedArgs{
 		"account_id": account.ID,
+		"code":       account.Code,
 		"name":       account.Name,
 		"is_debit":   account.IsDebit,
 		"user_id":    account.UserID,

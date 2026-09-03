@@ -13,6 +13,7 @@ import (
 	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
 
 	"connectrpc.com/connect"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type con struct {
@@ -48,34 +49,45 @@ func (c *con) GetAll(ctx context.Context, in *bookkeepingv1.TransactionServiceGe
 }
 
 func (c *con) Create(ctx context.Context, in *bookkeepingv1.TransactionServiceCreateRequest) (*bookkeepingv1.TransactionServiceCreateResponse, error) {
-	entries := make([]model.Entry, len(in.Entries))
-	for idx, e := range in.Entries {
-		entries[idx].AccountID = e.AccountId
-		entries[idx].Amount = e.Amount
-	}
+	entries := protoEntriesToEntries(in.Entries)
 
-	te := &model.TransactionEntry{
-		Transaction: model.Transaction{Datetime: in.Time.AsTime()},
-		Entries:     entries,
-	}
-
-	transactionID, err := c.repo.Create(ctx, te)
+	transactionID, err := c.repo.Create(ctx, model.Transaction{
+		Description: pgtype.Text{String: in.Description, Valid: in.Description != ""},
+		Note:        pgtype.Text{String: in.Note, Valid: in.Note != ""},
+		Datetime:    in.Time.AsTime(),
+	}, entries)
 	if err != nil {
 		return nil, err
 	}
 
-	te.TransactionID = transactionID
-
-	return &bookkeepingv1.TransactionServiceCreateResponse{TransactionEntry: te.ToProto()}, nil
+	return &bookkeepingv1.TransactionServiceCreateResponse{TransactionEntry: &bookkeepingv1.TransactionEntry{
+		Id:          transactionID,
+		Time:        in.Time,
+		Description: in.Description,
+		Note:        in.Note,
+		Entries:     in.Entries,
+	}}, nil
 }
 
 func (c *con) Update(ctx context.Context, in *bookkeepingv1.TransactionServiceUpdateRequest) (*bookkeepingv1.TransactionServiceUpdateResponse, error) {
-	err := c.repo.Update(ctx, nil)
+	entries := protoEntriesToEntries(in.Entries)
+
+	err := c.repo.Update(ctx, model.Transaction{
+		Description: pgtype.Text{String: in.Description, Valid: in.Description != ""},
+		Note:        pgtype.Text{String: in.Note, Valid: in.Note != ""},
+		Datetime:    in.Time.AsTime(),
+	}, entries)
 	if err != nil {
 		return nil, err
 	}
 
-	return &bookkeepingv1.TransactionServiceUpdateResponse{TransactionEntry: in.TransactionEntry}, nil
+	return &bookkeepingv1.TransactionServiceUpdateResponse{TransactionEntry: &bookkeepingv1.TransactionEntry{
+		Id:          in.Id,
+		Time:        in.Time,
+		Description: in.Description,
+		Note:        in.Note,
+		Entries:     in.Entries,
+	}}, nil
 }
 
 func (c *con) Delete(ctx context.Context, in *bookkeepingv1.TransactionServiceDeleteRequest) (*bookkeepingv1.TransactionServiceDeleteResponse, error) {
@@ -90,4 +102,14 @@ func (c *con) Delete(ctx context.Context, in *bookkeepingv1.TransactionServiceDe
 	}
 
 	return &bookkeepingv1.TransactionServiceDeleteResponse{}, nil
+}
+
+func protoEntriesToEntries(protoEntries []*bookkeepingv1.Entry) []model.Entry {
+	entries := make([]model.Entry, len(protoEntries))
+	for idx, e := range protoEntries {
+		entries[idx].AccountID = e.AccountId
+		entries[idx].Amount = e.Amount
+	}
+
+	return entries
 }

@@ -3,10 +3,7 @@ package transaction_test
 import (
 	"testing"
 
-	"fbt/backend/internal/domain/bookkeeping/features/account"
 	"fbt/backend/internal/domain/bookkeeping/features/transaction"
-	"fbt/backend/internal/domain/bookkeeping/model"
-	"fbt/backend/internal/domain/bookkeeping/service"
 	"fbt/backend/internal/test"
 
 	bookkeepingv1 "fbt/backend/gen/proto/go/bookkeeping/v1"
@@ -16,29 +13,13 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func TestTransaction(t *testing.T) {
+func TestTransactionController(t *testing.T) {
 	d := test.Setup(t)
 	testUtil := test.NewTestUtil(d)
 	session := testUtil.SetupUser(t)
+	accounts := testUtil.SetupAccount(t, session.Id)
 
-	service := service.NewService(d)
-	accController := account.NewController(service, account.NewRepo(d.DB))
-	controller := transaction.NewController(service, transaction.NewRepo(d.DB))
-
-	cash := model.Account{Name: "Cash", IsDebit: true}
-	loan := model.Account{Name: "Loan", IsDebit: false}
-
-	for _, a := range []*model.Account{&cash, &loan} {
-		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
-
-		res, err := accController.Create(ctx, &bookkeepingv1.AccountServiceCreateRequest{
-			Name:    a.Name,
-			IsDebit: a.IsDebit,
-		})
-		require.NoError(t, err)
-
-		a.ID = res.Account.Id
-	}
+	controller := transaction.NewController(testUtil.BookkeepingService, transaction.NewRepo(d.DB))
 
 	t.Run("GetAll (empty)", func(t *testing.T) {
 		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
@@ -53,14 +34,18 @@ func TestTransaction(t *testing.T) {
 		ctx := testUtil.NewAuthContext(t.Context(), session.Id)
 
 		res, err := controller.Create(ctx, &bookkeepingv1.TransactionServiceCreateRequest{
-			Time: timestamppb.Now(),
+			Time:        timestamppb.Now(),
+			Description: "Loan Cash",
+			Note:        "Interest Rate 5%",
 			Entries: []*bookkeepingv1.Entry{
-				{AccountId: cash.ID, Amount: 100},
-				{AccountId: loan.ID, Amount: 100},
+				{AccountId: accounts.Cash.ID, Amount: 100},
+				{AccountId: accounts.Loan.ID, Amount: 100},
 			},
 		})
 		require.NoError(t, err)
 
+		assert.Equal(t, "Loan Cash", res.TransactionEntry.Description)
+		assert.Equal(t, "Interest Rate 5%", res.TransactionEntry.Note)
 		assert.Len(t, res.TransactionEntry.Entries, 2)
 	})
 
@@ -71,5 +56,7 @@ func TestTransaction(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Len(t, res.TransactionEntry, 1)
+		assert.Equal(t, "Loan Cash", res.TransactionEntry[0].Description)
+		assert.Equal(t, "Interest Rate 5%", res.TransactionEntry[0].Note)
 	})
 }

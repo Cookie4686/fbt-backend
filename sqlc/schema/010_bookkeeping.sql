@@ -1,6 +1,7 @@
 -- +goose Up
 CREATE TABLE "accounts" (
 	"account_id" serial,
+  "code" varchar(255) NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"is_debit" boolean NOT NULL,
 	"user_id" varchar(255) NOT NULL,
@@ -10,8 +11,8 @@ CREATE TABLE "accounts" (
 );
 
 CREATE TABLE "tags" (
-    "tag_id" bigserial,
-    "name" varchar(255) NOT NULL,
+  "tag_id" bigserial,
+  "name" varchar(255) NOT NULL,
 	"user_id" varchar(255) NOT NULL,
 
 	CONSTRAINT "tags_tag_id_pk" PRIMARY KEY("tag_id"),
@@ -21,26 +22,28 @@ CREATE TABLE "tags" (
 
 CREATE TABLE "account_tag" (
 	"account_id" int NOT NULL,
-    "tag_id" bigint NOT NULL,
+  "tag_id" bigint NOT NULL,
 
 	CONSTRAINT "account_tag_unique" UNIQUE(account_id, tag_id)
 );
 
 CREATE TABLE "transactions" (
-    "transaction_id" bigserial,
-    "datetime" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "transaction_id" bigserial,
+  "description" text,
+  "note" text,
+  "datetime" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
 	CONSTRAINT "transactions_transaction_id_pk" PRIMARY KEY("transaction_id")
 );
 
 CREATE TABLE "entries" (
-    "transaction_id" bigint NOT NULL,
+  "transaction_id" bigint NOT NULL,
 	"account_id" int NOT NULL,
-    "amount" numeric(7, 2) NOT NULL,
-    
+  "amount" numeric(7, 2) NOT NULL,
+
 	CONSTRAINT "transactions_account_id_fk" FOREIGN KEY("account_id") REFERENCES accounts("account_id") ON DELETE CASCADE,
 	CONSTRAINT "transactions_transaction_id_fk" FOREIGN KEY("transaction_id") REFERENCES transactions("transaction_id") ON DELETE CASCADE,
-    CONSTRAINT "entries_amount_positive" CHECK (amount > 0)
+  CONSTRAINT "entries_amount_positive" CHECK (amount > 0)
 );
 
 -- +goose Down

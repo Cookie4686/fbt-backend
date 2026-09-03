@@ -15,7 +15,7 @@ import (
 	"connectrpc.com/connect"
 )
 
-type con struct {
+type Controller struct {
 	service service.Service
 	repo    Repo
 }
@@ -24,11 +24,11 @@ func NewServiceHandler(service service.Service, repo Repo, opts ...connect.Handl
 	return bookkeepingv1connect.NewAccountServiceHandler(NewController(service, repo), opts...)
 }
 
-func NewController(service service.Service, repo Repo) *con {
-	return &con{service, repo}
+func NewController(service service.Service, repo Repo) *Controller {
+	return &Controller{service, repo}
 }
 
-func (c *con) GetAll(ctx context.Context, in *bookkeepingv1.AccountServiceGetAllRequest) (*bookkeepingv1.AccountServiceGetAllResponse, error) {
+func (c *Controller) GetAll(ctx context.Context, in *bookkeepingv1.AccountServiceGetAllRequest) (*bookkeepingv1.AccountServiceGetAllResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -50,7 +50,7 @@ func (c *con) GetAll(ctx context.Context, in *bookkeepingv1.AccountServiceGetAll
 	return &bookkeepingv1.AccountServiceGetAllResponse{Account: accounts}, nil
 }
 
-func (c *con) Create(ctx context.Context, in *bookkeepingv1.AccountServiceCreateRequest) (*bookkeepingv1.AccountServiceCreateResponse, error) {
+func (c *Controller) Create(ctx context.Context, in *bookkeepingv1.AccountServiceCreateRequest) (*bookkeepingv1.AccountServiceCreateResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -60,6 +60,7 @@ func (c *con) Create(ctx context.Context, in *bookkeepingv1.AccountServiceCreate
 	}
 
 	account := &model.Account{
+		Code:    in.Code,
 		Name:    in.Name,
 		IsDebit: in.IsDebit,
 		UserID:  auth.Session.UserID,
@@ -75,7 +76,7 @@ func (c *con) Create(ctx context.Context, in *bookkeepingv1.AccountServiceCreate
 	return &bookkeepingv1.AccountServiceCreateResponse{Account: account.ToProto()}, nil
 }
 
-func (c *con) Update(ctx context.Context, in *bookkeepingv1.AccountServiceUpdateRequest) (*bookkeepingv1.AccountServiceUpdateResponse, error) {
+func (c *Controller) Update(ctx context.Context, in *bookkeepingv1.AccountServiceUpdateRequest) (*bookkeepingv1.AccountServiceUpdateResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -86,6 +87,7 @@ func (c *con) Update(ctx context.Context, in *bookkeepingv1.AccountServiceUpdate
 
 	account := &model.Account{
 		ID:      in.Id,
+		Code:    in.Code,
 		Name:    in.Name,
 		IsDebit: in.IsDebit,
 		UserID:  auth.Session.UserID,
@@ -99,7 +101,7 @@ func (c *con) Update(ctx context.Context, in *bookkeepingv1.AccountServiceUpdate
 	return &bookkeepingv1.AccountServiceUpdateResponse{Account: account.ToProto()}, nil
 }
 
-func (c *con) Delete(ctx context.Context, in *bookkeepingv1.AccountServiceDeleteRequest) (*bookkeepingv1.AccountServiceDeleteResponse, error) {
+func (c *Controller) Delete(ctx context.Context, in *bookkeepingv1.AccountServiceDeleteRequest) (*bookkeepingv1.AccountServiceDeleteResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 

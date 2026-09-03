@@ -106,7 +106,9 @@ func (x *TransactionServiceGetAllResponse) GetTransactionEntry() []*TransactionE
 type TransactionServiceCreateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Time          *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=time,proto3" json:"time,omitempty"`
-	Entries       []*Entry               `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Note          string                 `protobuf:"bytes,3,opt,name=note,proto3" json:"note,omitempty"`
+	Entries       []*Entry               `protobuf:"bytes,4,rep,name=entries,proto3" json:"entries,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -146,6 +148,20 @@ func (x *TransactionServiceCreateRequest) GetTime() *timestamppb.Timestamp {
 		return x.Time
 	}
 	return nil
+}
+
+func (x *TransactionServiceCreateRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *TransactionServiceCreateRequest) GetNote() string {
+	if x != nil {
+		return x.Note
+	}
+	return ""
 }
 
 func (x *TransactionServiceCreateRequest) GetEntries() []*Entry {
@@ -200,10 +216,14 @@ func (x *TransactionServiceCreateResponse) GetTransactionEntry() *TransactionEnt
 }
 
 type TransactionServiceUpdateRequest struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	TransactionEntry *TransactionEntry      `protobuf:"bytes,1,opt,name=transaction_entry,json=transactionEntry,proto3" json:"transaction_entry,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Time          *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=time,proto3" json:"time,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Note          string                 `protobuf:"bytes,4,opt,name=note,proto3" json:"note,omitempty"`
+	Entries       []*Entry               `protobuf:"bytes,5,rep,name=entries,proto3" json:"entries,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *TransactionServiceUpdateRequest) Reset() {
@@ -236,9 +256,37 @@ func (*TransactionServiceUpdateRequest) Descriptor() ([]byte, []int) {
 	return file_bookkeeping_v1_transaction_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *TransactionServiceUpdateRequest) GetTransactionEntry() *TransactionEntry {
+func (x *TransactionServiceUpdateRequest) GetId() int64 {
 	if x != nil {
-		return x.TransactionEntry
+		return x.Id
+	}
+	return 0
+}
+
+func (x *TransactionServiceUpdateRequest) GetTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Time
+	}
+	return nil
+}
+
+func (x *TransactionServiceUpdateRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *TransactionServiceUpdateRequest) GetNote() string {
+	if x != nil {
+		return x.Note
+	}
+	return ""
+}
+
+func (x *TransactionServiceUpdateRequest) GetEntries() []*Entry {
+	if x != nil {
+		return x.Entries
 	}
 	return nil
 }
@@ -374,14 +422,20 @@ const file_bookkeeping_v1_transaction_proto_rawDesc = "" +
 	" bookkeeping/v1/transaction.proto\x12\x0ebookkeeping.v1\x1a\x1bbookkeeping/v1/common.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"!\n" +
 	"\x1fTransactionServiceGetAllRequest\"y\n" +
 	" TransactionServiceGetAllResponse\x12U\n" +
-	"\x11transaction_entry\x18\x01 \x03(\v2 .bookkeeping.v1.TransactionEntryB\x06\xbaH\x03\xc8\x01\x01R\x10transactionEntry\"\x92\x01\n" +
+	"\x11transaction_entry\x18\x01 \x03(\v2 .bookkeeping.v1.TransactionEntryB\x06\xbaH\x03\xc8\x01\x01R\x10transactionEntry\"\xc8\x01\n" +
 	"\x1fTransactionServiceCreateRequest\x126\n" +
-	"\x04time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampB\x06\xbaH\x03\xc8\x01\x01R\x04time\x127\n" +
-	"\aentries\x18\x02 \x03(\v2\x15.bookkeeping.v1.EntryB\x06\xbaH\x03\xc8\x01\x01R\aentries\"y\n" +
+	"\x04time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampB\x06\xbaH\x03\xc8\x01\x01R\x04time\x12 \n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x12\n" +
+	"\x04note\x18\x03 \x01(\tR\x04note\x127\n" +
+	"\aentries\x18\x04 \x03(\v2\x15.bookkeeping.v1.EntryB\x06\xbaH\x03\xc8\x01\x01R\aentries\"y\n" +
 	" TransactionServiceCreateResponse\x12U\n" +
-	"\x11transaction_entry\x18\x01 \x01(\v2 .bookkeeping.v1.TransactionEntryB\x06\xbaH\x03\xc8\x01\x01R\x10transactionEntry\"x\n" +
-	"\x1fTransactionServiceUpdateRequest\x12U\n" +
-	"\x11transaction_entry\x18\x01 \x01(\v2 .bookkeeping.v1.TransactionEntryB\x06\xbaH\x03\xc8\x01\x01R\x10transactionEntry\"y\n" +
+	"\x11transaction_entry\x18\x01 \x01(\v2 .bookkeeping.v1.TransactionEntryB\x06\xbaH\x03\xc8\x01\x01R\x10transactionEntry\"\xd0\x01\n" +
+	"\x1fTransactionServiceUpdateRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12.\n" +
+	"\x04time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x04time\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x12\n" +
+	"\x04note\x18\x04 \x01(\tR\x04note\x127\n" +
+	"\aentries\x18\x05 \x03(\v2\x15.bookkeeping.v1.EntryB\x06\xbaH\x03\xc8\x01\x01R\aentries\"y\n" +
 	" TransactionServiceUpdateResponse\x12U\n" +
 	"\x11transaction_entry\x18\x01 \x01(\v2 .bookkeeping.v1.TransactionEntryB\x06\xbaH\x03\xc8\x01\x01R\x10transactionEntry\"9\n" +
 	"\x1fTransactionServiceDeleteRequest\x12\x16\n" +
@@ -425,21 +479,22 @@ var file_bookkeeping_v1_transaction_proto_depIdxs = []int32{
 	9,  // 1: bookkeeping.v1.TransactionServiceCreateRequest.time:type_name -> google.protobuf.Timestamp
 	10, // 2: bookkeeping.v1.TransactionServiceCreateRequest.entries:type_name -> bookkeeping.v1.Entry
 	8,  // 3: bookkeeping.v1.TransactionServiceCreateResponse.transaction_entry:type_name -> bookkeeping.v1.TransactionEntry
-	8,  // 4: bookkeeping.v1.TransactionServiceUpdateRequest.transaction_entry:type_name -> bookkeeping.v1.TransactionEntry
-	8,  // 5: bookkeeping.v1.TransactionServiceUpdateResponse.transaction_entry:type_name -> bookkeeping.v1.TransactionEntry
-	0,  // 6: bookkeeping.v1.TransactionService.GetAll:input_type -> bookkeeping.v1.TransactionServiceGetAllRequest
-	2,  // 7: bookkeeping.v1.TransactionService.Create:input_type -> bookkeeping.v1.TransactionServiceCreateRequest
-	4,  // 8: bookkeeping.v1.TransactionService.Update:input_type -> bookkeeping.v1.TransactionServiceUpdateRequest
-	6,  // 9: bookkeeping.v1.TransactionService.Delete:input_type -> bookkeeping.v1.TransactionServiceDeleteRequest
-	1,  // 10: bookkeeping.v1.TransactionService.GetAll:output_type -> bookkeeping.v1.TransactionServiceGetAllResponse
-	3,  // 11: bookkeeping.v1.TransactionService.Create:output_type -> bookkeeping.v1.TransactionServiceCreateResponse
-	5,  // 12: bookkeeping.v1.TransactionService.Update:output_type -> bookkeeping.v1.TransactionServiceUpdateResponse
-	7,  // 13: bookkeeping.v1.TransactionService.Delete:output_type -> bookkeeping.v1.TransactionServiceDeleteResponse
-	10, // [10:14] is the sub-list for method output_type
-	6,  // [6:10] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	9,  // 4: bookkeeping.v1.TransactionServiceUpdateRequest.time:type_name -> google.protobuf.Timestamp
+	10, // 5: bookkeeping.v1.TransactionServiceUpdateRequest.entries:type_name -> bookkeeping.v1.Entry
+	8,  // 6: bookkeeping.v1.TransactionServiceUpdateResponse.transaction_entry:type_name -> bookkeeping.v1.TransactionEntry
+	0,  // 7: bookkeeping.v1.TransactionService.GetAll:input_type -> bookkeeping.v1.TransactionServiceGetAllRequest
+	2,  // 8: bookkeeping.v1.TransactionService.Create:input_type -> bookkeeping.v1.TransactionServiceCreateRequest
+	4,  // 9: bookkeeping.v1.TransactionService.Update:input_type -> bookkeeping.v1.TransactionServiceUpdateRequest
+	6,  // 10: bookkeeping.v1.TransactionService.Delete:input_type -> bookkeeping.v1.TransactionServiceDeleteRequest
+	1,  // 11: bookkeeping.v1.TransactionService.GetAll:output_type -> bookkeeping.v1.TransactionServiceGetAllResponse
+	3,  // 12: bookkeeping.v1.TransactionService.Create:output_type -> bookkeeping.v1.TransactionServiceCreateResponse
+	5,  // 13: bookkeeping.v1.TransactionService.Update:output_type -> bookkeeping.v1.TransactionServiceUpdateResponse
+	7,  // 14: bookkeeping.v1.TransactionService.Delete:output_type -> bookkeeping.v1.TransactionServiceDeleteResponse
+	11, // [11:15] is the sub-list for method output_type
+	7,  // [7:11] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_bookkeeping_v1_transaction_proto_init() }

@@ -26,9 +26,10 @@ const (
 type Account struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	IsDebit       bool                   `protobuf:"varint,3,opt,name=is_debit,json=isDebit,proto3" json:"is_debit,omitempty"`
-	UserId        string                 `protobuf:"bytes,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Code          string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	IsDebit       bool                   `protobuf:"varint,4,opt,name=is_debit,json=isDebit,proto3" json:"is_debit,omitempty"`
+	UserId        string                 `protobuf:"bytes,5,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -70,6 +71,13 @@ func (x *Account) GetId() int32 {
 	return 0
 }
 
+func (x *Account) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
 func (x *Account) GetName() string {
 	if x != nil {
 		return x.Name
@@ -94,8 +102,10 @@ func (x *Account) GetUserId() string {
 type TransactionEntry struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Time          *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=time,proto3" json:"time,omitempty"`
-	Entries       []*Entry               `protobuf:"bytes,3,rep,name=entries,proto3" json:"entries,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Note          string                 `protobuf:"bytes,3,opt,name=note,proto3" json:"note,omitempty"`
+	Time          *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=time,proto3" json:"time,omitempty"`
+	Entries       []*Entry               `protobuf:"bytes,5,rep,name=entries,proto3" json:"entries,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -135,6 +145,20 @@ func (x *TransactionEntry) GetId() int64 {
 		return x.Id
 	}
 	return 0
+}
+
+func (x *TransactionEntry) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *TransactionEntry) GetNote() string {
+	if x != nil {
+		return x.Note
+	}
+	return ""
 }
 
 func (x *TransactionEntry) GetTime() *timestamppb.Timestamp {
@@ -207,16 +231,19 @@ var File_bookkeeping_v1_common_proto protoreflect.FileDescriptor
 
 const file_bookkeeping_v1_common_proto_rawDesc = "" +
 	"\n" +
-	"\x1bbookkeeping/v1/common.proto\x12\x0ebookkeeping.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"y\n" +
+	"\x1bbookkeeping/v1/common.proto\x12\x0ebookkeeping.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x95\x01\n" +
 	"\aAccount\x12\x16\n" +
 	"\x02id\x18\x01 \x01(\x05B\x06\xbaH\x03\xc8\x01\x01R\x02id\x12\x1a\n" +
-	"\x04name\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04name\x12\x19\n" +
-	"\bis_debit\x18\x03 \x01(\bR\aisDebit\x12\x1f\n" +
-	"\auser_id\x18\x04 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x06userId\"\x9b\x01\n" +
+	"\x04code\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04code\x12\x1a\n" +
+	"\x04name\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04name\x12\x19\n" +
+	"\bis_debit\x18\x04 \x01(\bR\aisDebit\x12\x1f\n" +
+	"\auser_id\x18\x05 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x06userId\"\xd1\x01\n" +
 	"\x10TransactionEntry\x12\x16\n" +
-	"\x02id\x18\x01 \x01(\x03B\x06\xbaH\x03\xc8\x01\x01R\x02id\x126\n" +
-	"\x04time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampB\x06\xbaH\x03\xc8\x01\x01R\x04time\x127\n" +
-	"\aentries\x18\x03 \x03(\v2\x15.bookkeeping.v1.EntryB\x06\xbaH\x03\xc8\x01\x01R\aentries\"N\n" +
+	"\x02id\x18\x01 \x01(\x03B\x06\xbaH\x03\xc8\x01\x01R\x02id\x12 \n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x12\n" +
+	"\x04note\x18\x03 \x01(\tR\x04note\x126\n" +
+	"\x04time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampB\x06\xbaH\x03\xc8\x01\x01R\x04time\x127\n" +
+	"\aentries\x18\x05 \x03(\v2\x15.bookkeeping.v1.EntryB\x06\xbaH\x03\xc8\x01\x01R\aentries\"N\n" +
 	"\x05Entry\x12%\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x05B\x06\xbaH\x03\xc8\x01\x01R\taccountId\x12\x1e\n" +

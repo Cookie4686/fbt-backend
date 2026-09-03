@@ -104,8 +104,9 @@ func (x *AccountServiceGetAllResponse) GetAccount() []*Account {
 
 type AccountServiceCreateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	IsDebit       bool                   `protobuf:"varint,2,opt,name=is_debit,json=isDebit,proto3" json:"is_debit,omitempty"`
+	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	IsDebit       bool                   `protobuf:"varint,3,opt,name=is_debit,json=isDebit,proto3" json:"is_debit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -138,6 +139,13 @@ func (x *AccountServiceCreateRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use AccountServiceCreateRequest.ProtoReflect.Descriptor instead.
 func (*AccountServiceCreateRequest) Descriptor() ([]byte, []int) {
 	return file_bookkeeping_v1_account_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *AccountServiceCreateRequest) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
 }
 
 func (x *AccountServiceCreateRequest) GetName() string {
@@ -201,8 +209,9 @@ func (x *AccountServiceCreateResponse) GetAccount() *Account {
 type AccountServiceUpdateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	IsDebit       bool                   `protobuf:"varint,3,opt,name=is_debit,json=isDebit,proto3" json:"is_debit,omitempty"`
+	Code          string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	IsDebit       bool                   `protobuf:"varint,4,opt,name=is_debit,json=isDebit,proto3" json:"is_debit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -242,6 +251,13 @@ func (x *AccountServiceUpdateRequest) GetId() int32 {
 		return x.Id
 	}
 	return 0
+}
+
+func (x *AccountServiceUpdateRequest) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
 }
 
 func (x *AccountServiceUpdateRequest) GetName() string {
@@ -389,16 +405,18 @@ const file_bookkeeping_v1_account_proto_rawDesc = "" +
 	"\x1cbookkeeping/v1/account.proto\x12\x0ebookkeeping.v1\x1a\x1bbookkeeping/v1/common.proto\x1a\x1bbuf/validate/validate.proto\"\x1d\n" +
 	"\x1bAccountServiceGetAllRequest\"Y\n" +
 	"\x1cAccountServiceGetAllResponse\x129\n" +
-	"\aaccount\x18\x01 \x03(\v2\x17.bookkeeping.v1.AccountB\x06\xbaH\x03\xc8\x01\x01R\aaccount\"T\n" +
+	"\aaccount\x18\x01 \x03(\v2\x17.bookkeeping.v1.AccountB\x06\xbaH\x03\xc8\x01\x01R\aaccount\"p\n" +
 	"\x1bAccountServiceCreateRequest\x12\x1a\n" +
-	"\x04name\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04name\x12\x19\n" +
-	"\bis_debit\x18\x02 \x01(\bR\aisDebit\"Y\n" +
-	"\x1cAccountServiceCreateResponse\x129\n" +
-	"\aaccount\x18\x01 \x01(\v2\x17.bookkeeping.v1.AccountB\x06\xbaH\x03\xc8\x01\x01R\aaccount\"l\n" +
-	"\x1bAccountServiceUpdateRequest\x12\x16\n" +
-	"\x02id\x18\x01 \x01(\x05B\x06\xbaH\x03\xc8\x01\x01R\x02id\x12\x1a\n" +
+	"\x04code\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04code\x12\x1a\n" +
 	"\x04name\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04name\x12\x19\n" +
 	"\bis_debit\x18\x03 \x01(\bR\aisDebit\"Y\n" +
+	"\x1cAccountServiceCreateResponse\x129\n" +
+	"\aaccount\x18\x01 \x01(\v2\x17.bookkeeping.v1.AccountB\x06\xbaH\x03\xc8\x01\x01R\aaccount\"\x88\x01\n" +
+	"\x1bAccountServiceUpdateRequest\x12\x16\n" +
+	"\x02id\x18\x01 \x01(\x05B\x06\xbaH\x03\xc8\x01\x01R\x02id\x12\x1a\n" +
+	"\x04code\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04code\x12\x1a\n" +
+	"\x04name\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04name\x12\x19\n" +
+	"\bis_debit\x18\x04 \x01(\bR\aisDebit\"Y\n" +
 	"\x1cAccountServiceUpdateResponse\x129\n" +
 	"\aaccount\x18\x01 \x01(\v2\x17.bookkeeping.v1.AccountB\x06\xbaH\x03\xc8\x01\x01R\aaccount\"5\n" +
 	"\x1bAccountServiceDeleteRequest\x12\x16\n" +
